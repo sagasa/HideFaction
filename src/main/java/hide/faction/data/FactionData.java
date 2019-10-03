@@ -23,7 +23,7 @@ import net.minecraftforge.common.util.INBTSerializable;
 
 public class FactionData implements INBTSerializable<NBTTagCompound> {
 
-	public FactionInventory inventory = new FactionInventory();
+	public FactionInventory inventory = new FactionInventory("test");
 	List<ItemStack> commonInventory = new ArrayList<>();
 	List<ItemStack> leaderInventory = new ArrayList<>();
 	Map<UUID, Post> postMap = new HashMap<>();
@@ -80,120 +80,10 @@ public class FactionData implements INBTSerializable<NBTTagCompound> {
 		});
 	}
 
-	public static class FactionInventory implements IInventory {
+	public static class FactionInventory extends InventoryBasic {
 
-		@Override
-		public String getName() {
-			// TODO 自動生成されたメソッド・スタブ
-			return null;
-		}
-
-		@Override
-		public boolean hasCustomName() {
-			// TODO 自動生成されたメソッド・スタブ
-			return false;
-		}
-
-		@Override
-		public ITextComponent getDisplayName() {
-			// TODO 自動生成されたメソッド・スタブ
-			return null;
-		}
-
-		@Override
-		public int getSizeInventory() {
-			// TODO 自動生成されたメソッド・スタブ
-			return 0;
-		}
-
-		@Override
-		public boolean isEmpty() {
-			// TODO 自動生成されたメソッド・スタブ
-			return false;
-		}
-
-		@Override
-		public ItemStack getStackInSlot(int index) {
-			// TODO 自動生成されたメソッド・スタブ
-			return null;
-		}
-
-		@Override
-		public ItemStack decrStackSize(int index, int count) {
-			// TODO 自動生成されたメソッド・スタブ
-			return null;
-		}
-
-		@Override
-		public ItemStack removeStackFromSlot(int index) {
-			// TODO 自動生成されたメソッド・スタブ
-			return null;
-		}
-
-		@Override
-		public void setInventorySlotContents(int index, ItemStack stack) {
-			// TODO 自動生成されたメソッド・スタブ
-
-		}
-
-		@Override
-		public int getInventoryStackLimit() {
-			// TODO 自動生成されたメソッド・スタブ
-			return 0;
-		}
-
-		@Override
-		public void markDirty() {
-			// TODO 自動生成されたメソッド・スタブ
-
-		}
-
-		@Override
-		public boolean isUsableByPlayer(EntityPlayer player) {
-			// TODO 自動生成されたメソッド・スタブ
-			return false;
-		}
-
-		@Override
-		public void openInventory(EntityPlayer player) {
-			// TODO 自動生成されたメソッド・スタブ
-
-		}
-
-		@Override
-		public void closeInventory(EntityPlayer player) {
-			// TODO 自動生成されたメソッド・スタブ
-
-		}
-
-		@Override
-		public boolean isItemValidForSlot(int index, ItemStack stack) {
-			// TODO 自動生成されたメソッド・スタブ
-			return false;
-		}
-
-		@Override
-		public int getField(int id) {
-			// TODO 自動生成されたメソッド・スタブ
-			return 0;
-		}
-
-		@Override
-		public void setField(int id, int value) {
-			// TODO 自動生成されたメソッド・スタブ
-
-		}
-
-		@Override
-		public int getFieldCount() {
-			// TODO 自動生成されたメソッド・スタブ
-			return 0;
-		}
-
-		@Override
-		public void clear() {
-			// TODO 自動生成されたメソッド・スタブ
-
+		public FactionInventory(String title) {
+			super(new TextComponentString(title), 54);
 		}
 
 	}

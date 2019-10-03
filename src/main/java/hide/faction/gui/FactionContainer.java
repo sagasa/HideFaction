@@ -2,6 +2,7 @@ package hide.faction.gui;
 
 import hide.faction.data.FactionData;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
@@ -9,11 +10,10 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 
 public class FactionContainer extends Container {
 	int xCoord, yCoord, zCoord;
-
-	InventoryBasic inventory = new InventoryBasic("faction", false, 54);
 
 	FactionData factionData;
 	/** アルミニウムチェストのインベントリの第一スロットの番号 */
@@ -30,7 +30,7 @@ public class FactionContainer extends Container {
 
 		for (int iy = 0; iy < 6; iy++) {
 			for (int ix = 0; ix < 9; ix++) {
-				this.addSlotToContainer(new Slot(inventory, ix + (iy * 9), 8 + (ix * 18), 18 + (iy * 18)));
+				this.addSlotToContainer(new Slot(data.inventory, ix + (iy * 9), 8 + (ix * 18), 18 + (iy * 18)));
 
 			}
 		}
@@ -44,14 +44,43 @@ public class FactionContainer extends Container {
 		}
 	}
 
-
-
 	@Override
 	public ItemStack transferStackInSlot(EntityPlayer playerIn, int index) {
 		System.out.println(playerIn + " " + index);
-		return super.transferStackInSlot(playerIn, index);
+		ItemStack itemstack = ItemStack.EMPTY;
+		Slot slot = this.inventorySlots.get(index);
+
+		if (slot != null && slot.getHasStack()) {
+			ItemStack itemstack1 = slot.getStack();
+			itemstack = itemstack1.copy();
+
+			if (index < this.index1) {
+				if (!this.mergeItemStack(itemstack1, index1, this.inventorySlots.size(), true)) {
+					return ItemStack.EMPTY;
+				}
+			} else if (!this.mergeItemStack(itemstack1, 0, index1, false)) {
+				return ItemStack.EMPTY;
+			}
+
+			if (itemstack1.isEmpty()) {
+				slot.putStack(ItemStack.EMPTY);
+			} else {
+				slot.onSlotChanged();
+			}
+		}
+
+		return itemstack;
 	}
 
+	@Override
+	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player) {
+		// TODO 自動生成されたメソッド・スタブ
+		ItemStack res = super.slotClick(slotId, dragType, clickTypeIn, player);
+		if (player instanceof EntityPlayerMP)
+			System.out.println(slotId + " " + dragType + " " + clickTypeIn + " " + player + " " + res);
+
+		return res;
+	}
 
 	@Override
 	public boolean canInteractWith(EntityPlayer playerIn) {
