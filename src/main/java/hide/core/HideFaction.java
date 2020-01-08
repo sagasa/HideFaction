@@ -1,5 +1,11 @@
-package hide.faction;
+package hide.core;
 
+import org.apache.logging.log4j.Logger;
+
+import hide.faction.command.CommandTerritory;
+import hide.faction.command.Faction;
+import hide.faction.gui.FactionGUIHandler;
+import hide.region.RegionCommand;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
@@ -13,13 +19,6 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
-
-import org.apache.logging.log4j.Logger;
-
-import hide.faction.command.CommandTerritory;
-import hide.faction.command.Faction;
-import hide.faction.gui.FactionGUIHandler;
-import hide.faction.territory.permission.TerritoryPermissions;
 
 @Mod(modid = HideFaction.MODID, name = HideFaction.NAME, version = HideFaction.VERSION)
 public class HideFaction {
@@ -56,6 +55,8 @@ public class HideFaction {
 
 		event.registerServerCommand(new Faction());
 		event.registerServerCommand(new CommandTerritory());
+
+		event.registerServerCommand(new RegionCommand());
 	}
 
 	@SubscribeEvent(priority = EventPriority.LOWEST)

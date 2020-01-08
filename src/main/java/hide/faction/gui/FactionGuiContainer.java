@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.google.common.collect.Lists;
 
-import hide.faction.HideFaction;
+import hide.core.HideFaction;
 import hide.faction.data.FactionData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;

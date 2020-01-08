@@ -1,6 +1,6 @@
 package hide.faction.gui;
 
-import hide.faction.HideFaction;
+import hide.core.HideFaction;
 import hide.faction.data.FactionData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.world.World;

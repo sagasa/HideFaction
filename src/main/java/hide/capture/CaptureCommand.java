@@ -1,29 +1,16 @@
-package hide.faction.command;
+package hide.capture;
 
 import java.util.Arrays;
 
 import hide.core.HideFaction;
 import hide.faction.data.FactionSaveData;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockAnvil;
-import net.minecraft.block.BlockBed;
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerList;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.Teleporter;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.storage.MapStorage;
 
-public class CommandTerritory extends CommandBase {
+public class CaptureCommand extends CommandBase {
 
 	@Override
 	public int getRequiredPermissionLevel() {
@@ -32,7 +19,7 @@ public class CommandTerritory extends CommandBase {
 
 	@Override
 	public String getName() {
-		return "territory";
+		return "faction";
 	}
 
 	@Override
@@ -43,8 +30,12 @@ public class CommandTerritory extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		System.out.println("exc" + Arrays.toString(args));
+		((EntityPlayer) sender.getCommandSenderEntity()).openGui(HideFaction.INSTANCE, HideFaction.GUI_ID,
+				sender.getEntityWorld(), 0, 0, 0);
 		// ((EntityPlayer) sender.getCommandSenderEntity())
 		// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
 		System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()));
+		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
+		sender.getEntityWorld().getMapStorage().setData("hideFaction", new FactionSaveData().test());
 	}
 }

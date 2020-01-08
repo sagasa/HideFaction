@@ -1,6 +1,6 @@
-package hide.faction.territory.permission;
+package hide.region;
 
-public enum PermissionType {
+public enum EnumRegionPermission {
 	/** ブロック破壊 */
 	BlockDestroy,
 	/** プレイヤー間のダメージの可否 */

@@ -1,16 +1,18 @@
-package hide.faction.command;
+package hide.region;
 
 import java.util.Arrays;
+import java.util.List;
 
-import hide.core.HideFaction;
-import hide.faction.data.FactionSaveData;
+import org.apache.commons.lang3.ArrayUtils;
+
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 
-public class Faction extends CommandBase {
+public class RegionCommand extends CommandBase {
 
 	@Override
 	public int getRequiredPermissionLevel() {
@@ -19,7 +21,7 @@ public class Faction extends CommandBase {
 
 	@Override
 	public String getName() {
-		return "faction";
+		return "region";
 	}
 
 	@Override
@@ -29,13 +31,17 @@ public class Faction extends CommandBase {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		System.out.println("exc" + Arrays.toString(args));
-		((EntityPlayer) sender.getCommandSenderEntity()).openGui(HideFaction.INSTANCE, HideFaction.GUI_ID,
-				sender.getEntityWorld(), 0, 0, 0);
+		System.out.println("exc" + Arrays.toString(args)+" "+new ChunkPos(sender.getPosition()));
 		// ((EntityPlayer) sender.getCommandSenderEntity())
 		// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
 		System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()));
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
-		sender.getEntityWorld().getMapStorage().setData("hideFaction", new FactionSaveData().test());
+
+	}
+
+	@Override
+	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
+		System.out.println(sender+" "+ArrayUtils.toString(args)+" "+targetPos);
+		return super.getTabCompletions(server, sender, args, targetPos);
 	}
 }
