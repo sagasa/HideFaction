@@ -7,6 +7,8 @@ import hide.faction.command.Faction;
 import hide.faction.gui.FactionGUIHandler;
 import hide.region.RegionCommand;
 import net.minecraft.init.Blocks;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.minecraftforge.fml.common.Mod;
@@ -19,6 +21,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 @Mod(modid = HideFaction.MODID, name = HideFaction.NAME, version = HideFaction.VERSION)
 public class HideFaction {
@@ -65,5 +68,13 @@ public class HideFaction {
 		if (event.getSide() == Side.SERVER) {
 		}
 		event.setCanceled(true);
+	}
+
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent()
+	public void onEvent(RenderGameOverlayEvent event) {
+		if (event.isCancelable() && event.getType() == ElementType.PLAYER_LIST) {
+
+		}
 	}
 }
