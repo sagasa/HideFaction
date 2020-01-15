@@ -8,9 +8,11 @@ import org.apache.commons.lang3.ArrayUtils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Vec3i;
 
 public class RegionCommand extends CommandBase {
 
@@ -29,12 +31,21 @@ public class RegionCommand extends CommandBase {
 		return "";
 	}
 
+	static RegionManager rm = new RegionManager();
+
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		System.out.println("exc" + Arrays.toString(args)+" "+new ChunkPos(sender.getPosition()));
 		// ((EntityPlayer) sender.getCommandSenderEntity())
 		// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
-		System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()));
+		//sender.getEntityWorld().getScoreboard().getTeam(teamName);
+		rm.getRegionList().clear();
+		rm.getRegionList().add(new RegionRect().setPos(new Vec3i(8, 60, 8), new Vec3i(-8, 65, -8)));
+		rm.registerRegionMap();
+
+		rm.permission((EntityPlayer) sender.getCommandSenderEntity(), null);
+
+		//System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()).getFriendlyFlags());
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
 
 	}

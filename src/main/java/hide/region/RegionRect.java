@@ -5,45 +5,59 @@ import java.util.Map;
 
 import com.google.gson.annotations.SerializedName;
 
+import hide.region.RegionManager.ChunkRegingMap;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3i;
 
 /**始点と終点を指定したレギオンの最小単位*/
-public class RegionRect implements IRegion {
+public class RegionRect {
 
 	@SerializedName("StartPos")
 	private Vec3i _start;
 
 	private Vec3i _end;
 
+	/**大きいほうが優先*/
 	private int _priority = 0;
 
+	private String _target;
+
 	private Map<EnumRegionPermission, EnumPermissionState> _permission = new HashMap<>();
+
+	/**2点を設定 チェック掛けるから制約はなし*/
+	public RegionRect setPos(Vec3i start,Vec3i end) {
+		_start = start;
+		_end = end;
+		checkPos();
+		return this;
+	}
+
 
 	/**start<endになるように調整*/
 	protected void checkPos() {
 		if (_end.getX() < _start.getX()) {
-			_start = new Vec3i(_end.getX(), _start.getY(), _start.getZ());
+			Vec3i start = new Vec3i(_end.getX(), _start.getY(), _start.getZ());
 			_end = new Vec3i(_start.getX(), _end.getY(), _end.getZ());
+			_start = start;
 		}
 		if (_end.getY() < _start.getY()) {
-			_start = new Vec3i(_start.getX(), _end.getY(), _start.getZ());
+			Vec3i start = new Vec3i(_start.getX(), _end.getY(), _start.getZ());
 			_end = new Vec3i(_end.getX(), _start.getY(), _end.getZ());
+			_start = start;
 		}
 		if (_end.getZ() < _start.getZ()) {
-			_start = new Vec3i(_start.getX(), _start.getY(), _end.getZ());
+			Vec3i start = new Vec3i(_start.getX(), _start.getY(), _end.getZ());
 			_end = new Vec3i(_end.getX(), _end.getY(), _start.getZ());
+			_start = start;
 		}
 	}
 
-	@Override
 	public boolean contain(Vec3i vec) {
 		return _start.getX() < vec.getX() && vec.getX() < _end.getX() &&
 				_start.getY() < vec.getY() && vec.getY() < _end.getY() &&
 				_start.getZ() < vec.getZ() && vec.getZ() < _end.getZ();
 	}
 
-	@Override
 	public void register(ChunkRegingMap chunkMap) {
 		int maxX = _end.getX() >> 4;
 		int minX = _start.getX() >> 4;
@@ -56,15 +70,12 @@ public class RegionRect implements IRegion {
 		}
 	}
 
-	@Override
 	public int getPriority() {
 		return _priority;
 	}
 
-	@Override
-	public Boolean checkPermission(EnumRegionPermission regionPermission) {
-		// TODO 自動生成されたメソッド・スタブ
-		return null;
+	public EnumPermissionState checkPermission(EnumRegionPermission regionPermission) {
+		return _permission.getOrDefault(regionPermission, EnumPermissionState.NONE);
 	}
 
 	/*
