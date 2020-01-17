@@ -70,6 +70,10 @@ public class RegionRect {
 		}
 	}
 
+	public void setPriority(int value) {
+		_priority = value;
+	}
+
 	public int getPriority() {
 		return _priority;
 	}

@@ -3,6 +3,7 @@ package hide.region;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +21,7 @@ public class RegionManager {
 
 	private ChunkRegingMap _regionMap = new ChunkRegingMap();
 
-	private Map<EnumRegionPermission, EnumPermissionState> _permission = new HashMap<>();
+	private Map<EnumRegionPermission, EnumPermissionState> _defaultPermission = new EnumMap(EnumRegionPermission.class);
 
 	/** リスト取得 */
 	public List<RegionRect> getRegionList() {
@@ -37,9 +38,11 @@ public class RegionManager {
 
 	public Boolean permission(EntityPlayer player, EnumRegionPermission permission) {
 		// player.world.getScoreboard().getTeam(player.getName()).getName();
+		EnumPermissionState state = _defaultPermission.getOrDefault(permission, EnumPermissionState.ALLOW);
 		List<RegionRect> list = _regionMap.getRegionList(new ChunkPos(player.getPosition()));
 
-
+		list.forEach(rg->System.out.println(rg.getPriority()));
+		System.out.println();
 		return null;
 
 	}

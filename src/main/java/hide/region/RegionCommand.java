@@ -40,10 +40,14 @@ public class RegionCommand extends CommandBase {
 		// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
 		//sender.getEntityWorld().getScoreboard().getTeam(teamName);
 		rm.getRegionList().clear();
-		rm.getRegionList().add(new RegionRect().setPos(new Vec3i(8, 60, 8), new Vec3i(-8, 65, -8)));
+		RegionRect rg = new RegionRect().setPos(new Vec3i(8, 60, 8), new Vec3i(-8, 65, -8));
+		rg.setPriority(10);
+		rm.getRegionList().add(rg);
+		rg = new RegionRect().setPos(new Vec3i(8, 60, 8), new Vec3i(0, 65, 0));
+		rm.getRegionList().add(rg);
 		rm.registerRegionMap();
 
-		rm.permission((EntityPlayer) sender.getCommandSenderEntity(), null);
+		rm.permission((EntityPlayer) sender.getCommandSenderEntity(), EnumRegionPermission.BlockDestroy);
 
 		//System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()).getFriendlyFlags());
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
