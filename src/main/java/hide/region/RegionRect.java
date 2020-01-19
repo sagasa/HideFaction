@@ -6,6 +6,7 @@ import java.util.Map;
 import com.google.gson.annotations.SerializedName;
 
 import hide.region.RegionManager.ChunkRegingMap;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3i;
 
@@ -25,13 +26,12 @@ public class RegionRect {
 	private Map<EnumRegionPermission, EnumPermissionState> _permission = new HashMap<>();
 
 	/**2点を設定 チェック掛けるから制約はなし*/
-	public RegionRect setPos(Vec3i start,Vec3i end) {
+	public RegionRect setPos(Vec3i start, Vec3i end) {
 		_start = start;
 		_end = end;
 		checkPos();
 		return this;
 	}
-
 
 	/**start<endになるように調整*/
 	protected void checkPos() {
@@ -78,8 +78,12 @@ public class RegionRect {
 		return _priority;
 	}
 
-	public EnumPermissionState checkPermission(EnumRegionPermission regionPermission) {
-		return _permission.getOrDefault(regionPermission, EnumPermissionState.NONE);
+	private static String empty = "";
+
+	public EnumPermissionState checkPermission(EnumRegionPermission regionPermission, EntityPlayer player) {
+		if (_target.length() != 0 && player.world != null && player.world.getScoreboard().getPlayersTeam(player.getName()) != null && player.world.getScoreboard().getPlayersTeam(player.getName()).getName().equals(_target))
+			return _permission.getOrDefault(regionPermission, EnumPermissionState.NONE);
+		return EnumPermissionState.NONE;
 	}
 
 	/*

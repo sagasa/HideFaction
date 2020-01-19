@@ -7,8 +7,10 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 
@@ -39,12 +41,12 @@ public class RegionManager {
 	public Boolean permission(EntityPlayer player, EnumRegionPermission permission) {
 		// player.world.getScoreboard().getTeam(player.getName()).getName();
 		EnumPermissionState state = _defaultPermission.getOrDefault(permission, EnumPermissionState.ALLOW);
-		List<RegionRect> list = _regionMap.getRegionList(new ChunkPos(player.getPosition()));
-
-		list.forEach(rg->System.out.println(rg.getPriority()));
-		System.out.println();
-		return null;
-
+		List<RegionRect> list = _regionMap.getRegionList(player.getPosition());
+		for (RegionRect rg : list) {
+			state = state.returnIfNone(rg.checkPermission(permission, player));
+		}
+		System.out.println(state);
+		return state == EnumPermissionState.ALLOW;
 	}
 
 	/** チャンク-レギオンリストのMap */
@@ -66,10 +68,11 @@ public class RegionManager {
 			chunkMap.get(pos).add(rect);
 		}
 
-		public List<RegionRect> getRegionList(ChunkPos pos) {
-			if (!chunkMap.containsKey(pos))
+		public List<RegionRect> getRegionList(BlockPos pos) {
+			ChunkPos cPos = new ChunkPos(pos);
+			if (!chunkMap.containsKey(cPos))
 				return Collections.EMPTY_LIST;
-			return chunkMap.get(pos);
+			return chunkMap.get(cPos).stream().filter(rg->rg.contain(pos)).collect(Collectors.toList());
 		}
 	}
 }
