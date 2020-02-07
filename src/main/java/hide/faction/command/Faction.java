@@ -3,7 +3,7 @@ package hide.faction.command;
 import java.util.Arrays;
 
 import hide.core.HideFaction;
-import hide.faction.data.FactionSaveData;
+import hide.faction.data.FactionWorldSave;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -36,6 +36,6 @@ public class Faction extends CommandBase {
 		// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
 		System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()));
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
-		sender.getEntityWorld().getMapStorage().setData("hideFaction", new FactionSaveData().test());
+		sender.getEntityWorld().getMapStorage().setData("hideFaction", new FactionWorldSave().test());
 	}
 }

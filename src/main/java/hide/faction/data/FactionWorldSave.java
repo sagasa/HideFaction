@@ -5,29 +5,27 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import hide.core.HideFaction;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.world.storage.WorldSavedData;
 
-public class FactionSaveData extends WorldSavedData {
+public class FactionWorldSave extends WorldSavedData {
 
 	public static String FACTION_SAVE = HideFaction.MODID + "_save";
 
 	Map<String, FactionData> factionData = new HashMap<>();
 
-	public FactionSaveData() {
+	public FactionWorldSave() {
 		super(FACTION_SAVE);
 
 	}
 
-	public FactionSaveData test() {
+	public FactionWorldSave test() {
 		FactionData fData = new FactionData();
 		fData.commonInventory.add(new ItemStack(Item.getItemById(7)));
 		factionData.put("test", fData);
-		FactionSaveData save = new FactionSaveData();
+		FactionWorldSave save = new FactionWorldSave();
 		save.readFromNBT(writeToNBT(new NBTTagCompound()));
 		System.out.println(save.factionData.get("test").commonInventory.get(0));
 		markDirty();

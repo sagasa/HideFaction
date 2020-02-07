@@ -3,7 +3,7 @@ package hide.faction.command;
 import java.util.Arrays;
 
 import hide.core.HideFaction;
-import hide.faction.data.FactionSaveData;
+import hide.faction.data.FactionWorldSave;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockAnvil;
 import net.minecraft.block.BlockBed;

@@ -2,6 +2,7 @@ package hide.region;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -22,6 +23,8 @@ public class RegionRect {
 	private int _priority = 0;
 
 	private String _target;
+
+	private Function<EntityPlayer, Boolean> bool;
 
 	private Map<EnumRegionPermission, EnumPermissionState> _permission = new HashMap<>();
 
@@ -79,6 +82,10 @@ public class RegionRect {
 	}
 
 	private static String empty = "";
+
+	private boolean isTarget(EntityPlayer player) {
+		return false;
+	}
 
 	public EnumPermissionState checkPermission(EnumRegionPermission regionPermission, EntityPlayer player) {
 		if (_target.length() != 0 && player.world != null && player.world.getScoreboard().getPlayersTeam(player.getName()) != null && player.world.getScoreboard().getPlayersTeam(player.getName()).getName().equals(_target))
