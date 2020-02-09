@@ -2,9 +2,8 @@ package hide.core;
 
 import org.apache.logging.log4j.Logger;
 
-import hide.faction.command.CommandTerritory;
+import hide.core.gui.FactionGUIHandler;
 import hide.faction.command.Faction;
-import hide.faction.gui.FactionGUIHandler;
 import hide.region.RegionCommand;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -57,7 +56,6 @@ public class HideFaction {
 	public void start(FMLServerStartingEvent event) {
 
 		event.registerServerCommand(new Faction());
-		event.registerServerCommand(new CommandTerritory());
 
 		event.registerServerCommand(new RegionCommand());
 	}

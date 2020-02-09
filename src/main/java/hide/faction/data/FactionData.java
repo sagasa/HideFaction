@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import hide.faction.gui.FactionGUIHandler;
+import hide.core.gui.FactionGUIHandler;
 
 import java.util.UUID;
 

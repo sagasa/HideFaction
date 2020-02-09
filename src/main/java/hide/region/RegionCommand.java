@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import hide.core.HideFaction;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -52,6 +53,9 @@ public class RegionCommand extends CommandBase {
 		//System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()).getFriendlyFlags());
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
 
+
+		((EntityPlayer) sender.getCommandSenderEntity()).openGui(HideFaction.INSTANCE, HideFaction.GUI_ID,
+				sender.getEntityWorld(), 0, 0, 0);
 	}
 
 	@Override
