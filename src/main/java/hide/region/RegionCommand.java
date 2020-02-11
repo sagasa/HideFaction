@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 
 import hide.core.HideFaction;
+import hide.region.gui.RegionEditGUI;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -54,7 +55,7 @@ public class RegionCommand extends CommandBase {
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
 
 
-		((EntityPlayer) sender.getCommandSenderEntity()).openGui(HideFaction.INSTANCE, HideFaction.GUI_ID,
+		((EntityPlayer) sender.getCommandSenderEntity()).openGui(HideFaction.INSTANCE, RegionEditGUI.ID,
 				sender.getEntityWorld(), 0, 0, 0);
 	}
 
