@@ -1,31 +1,32 @@
 package hide.region.gui;
 
+import java.io.IOException;
+
 import hide.core.HideFaction;
-import hide.core.gui.FactionGUIHandler;
-import hide.core.gui.FactionGUIHandler.HideGuiProvider;
+import hide.core.network.PacketSimpleCmd;
+import hide.core.network.PacketSimpleCmd.Cmd;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
-
 public class RegionEditGUI extends GuiScreen{
 
-	public static int ID = FactionGUIHandler.register(new HideGuiProvider() {
-		@Override
-		public Object getServerGuiElement(EntityPlayer player, World world, int x, int y, int z) {
-			return null;
-		}
 
-		@Override
-		public Object getClientGuiElement(EntityPlayer player, World world, int x, int y, int z) {
-			System.out.println("make GUI");
-			return new RegionEditGUI();
-		}
-	});
+	@Override
+	public void initGui() {
+		super.initGui();
+		buttonList.add(new GuiButton(0, 10, 10,20,20, "test"));
+	}
 
-	public RegionEditGUI() {
-		buttonList.add(new GuiButton(0, 10, 10, "test"));
+	@Override
+	protected void actionPerformed(GuiButton button) throws IOException {
+		super.actionPerformed(button);
+		HideFaction.NETWORK.sendToServer(new PacketSimpleCmd(Cmd.S));
+	}
+
+	@Override
+	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+		super.drawScreen(mouseX, mouseY, partialTicks);
+		drawString(fontRenderer, "true", 40, 40, 0);
 	}
 
 	private static final ResourceLocation GUITEXTURE = new ResourceLocation("textures/gui/container/generic_54.png");
