@@ -12,11 +12,13 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -91,7 +93,13 @@ public class HideFaction {
 
 
 
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent()
+	public void onEvent(PlaySoundAtEntityEvent event) {
+		if (event.getEntity() instanceof EntityPlayer) {
 
+		}
+	}
 
 
 
@@ -130,7 +138,7 @@ public class HideFaction {
 		GlStateManager.translate(-x, -y, -z);
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buf = tessellator.getBuffer();
-		buf.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION);
+		buf.begin(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION);
 		buf.pos(0, 0, 0).endVertex();
 		buf.pos(0, 100, 0).endVertex();
 		buf.pos(100, 100, 0).endVertex();

@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import hide.region.gui.RegionEditGUI;
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -55,8 +53,10 @@ public class RegionCommand extends CommandBase {
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
 
 
-		Minecraft.getMinecraft().displayGuiScreen(new RegionEditGUI());
+		//Minecraft.getMinecraft().displayGuiScreen(new RegionEditGUI());
 	}
+
+
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {

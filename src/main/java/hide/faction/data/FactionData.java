@@ -5,20 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import hide.core.gui.FactionGUIHandler;
-
 import java.util.UUID;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.util.INBTSerializable;
 
 public class FactionData implements INBTSerializable<NBTTagCompound> {
@@ -83,7 +75,7 @@ public class FactionData implements INBTSerializable<NBTTagCompound> {
 	public static class FactionInventory extends InventoryBasic {
 
 		public FactionInventory(String title) {
-			super(new TextComponentString(title), 54);
+			super(title,false, 54);
 		}
 
 	}
