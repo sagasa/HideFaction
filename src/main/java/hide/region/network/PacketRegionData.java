@@ -113,16 +113,14 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 
 	@Override
 	public IMessage onMessage(PacketRegionData msg, MessageContext ctx) {
-		System.out.println("RRRRRRR " + Thread.currentThread() + " " + msg.mode);
 		//受信したデータで上書き
 		if (ctx.side == Side.CLIENT) {
 			switch (msg.mode) {
 			case REGION_LIST:
 				RegionManager.getManager(Minecraft.getMinecraft().world).RegionList = msg.regionList;
 				RegionManager.getManager(Minecraft.getMinecraft().world).registerRegionMap();
-				System.out.println("OVER "+msg.regionList);
+				System.out.println("OVER " + msg.regionList);
 				break;
-
 			default:
 				break;
 			}

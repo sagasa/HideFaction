@@ -63,13 +63,13 @@ public class RegionManager {
 		_ruleRegionMap.sort();
 	}
 
-	/**レギオンを検索して許可されるか出力*/
+	/**レギオンを検索して許可されるか返す*/
 	public boolean permission(BlockPos pos, EntityPlayer player, EnumRegionPermission permission) {
 		if (permission.ArrowFromOP && OPPlayers.contains(player))
 			return true;
 		// player.world.getScoreboard().getTeam(player.getName()).getName();
 		boolean state = _ruleRegionMap.permission(pos, player, permission);
-		System.out.println(RegionList + " " + _ruleRegionMap.getRegion(pos, null));
+		//System.out.println(RegionList + " " + _ruleRegionMap.getRegion(pos, null));
 		return state;
 	}
 

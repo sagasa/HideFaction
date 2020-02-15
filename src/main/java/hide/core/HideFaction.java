@@ -25,6 +25,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
+import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
@@ -99,19 +100,25 @@ public class HideFaction {
 		}
 	}
 
+	/**クライアントのアニメーションをキャンセル*/
 	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void registerSound(LeftClickBlock event) {
-		System.out.println(event.getSide() + " " + event.getPos() + " " + event.getPhase());
-		if (event.getSide() == Side.SERVER) {
-
-		}
-		if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.BlockDestroy)) {
-			event.setCanceled(true);
-			System.out.println("No!!");
+	public void leftClick(LeftClickBlock event) {
+		if (event.getSide() == Side.CLIENT) {
+			if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.BlockDestroy)) {
+				event.setCanceled(true);
+			}
 		}
 
 	}
 
+	/**サーバー側で破壊をキャンセル*/
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public void leftClick(BreakEvent event) {
+		if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getPlayer(), EnumRegionPermission.BlockDestroy)) {
+			event.setCanceled(true);
+		}
+
+	}
 
 	@SubscribeEvent
 	public void onEvent(PlayerLoggedInEvent event) {

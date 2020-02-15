@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import hide.faction.FactionRank;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -18,7 +19,7 @@ public class FactionData implements INBTSerializable<NBTTagCompound> {
 	public FactionInventory inventory = new FactionInventory("test");
 	List<ItemStack> commonInventory = new ArrayList<>();
 	List<ItemStack> leaderInventory = new ArrayList<>();
-	Map<UUID, Post> postMap = new HashMap<>();
+	Map<UUID, FactionRank> postMap = new HashMap<>();
 	int currency = 0;
 
 	private static final String COMMON_INVENTORY = "commonInventory";
@@ -48,7 +49,7 @@ public class FactionData implements INBTSerializable<NBTTagCompound> {
 			leaderInv.appendTag(stack.serializeNBT());
 		root.setTag(LEADER_INVENTORY, leaderInv);
 		NBTTagList posts = new NBTTagList();
-		for (Entry<UUID, Post> entry : postMap.entrySet()) {
+		for (Entry<UUID, FactionRank> entry : postMap.entrySet()) {
 			NBTTagCompound tag = new NBTTagCompound();
 			tag.setLong(UUID_MOST, entry.getKey().getMostSignificantBits());
 			tag.setLong(UUID_LEAST, entry.getKey().getLeastSignificantBits());
@@ -68,19 +69,15 @@ public class FactionData implements INBTSerializable<NBTTagCompound> {
 		NBTTagList posts = nbt.getTagList(POST_MAP, 10);
 		posts.forEach(t -> {
 			NBTTagCompound tag = (NBTTagCompound) t;
-			postMap.put(new UUID(tag.getLong(UUID_MOST), tag.getLong(UUID_LEAST)), Post.valueOf(tag.getString(POST)));
+			postMap.put(new UUID(tag.getLong(UUID_MOST), tag.getLong(UUID_LEAST)), FactionRank.valueOf(tag.getString(POST)));
 		});
 	}
 
 	public static class FactionInventory extends InventoryBasic {
 
 		public FactionInventory(String title) {
-			super(title,false, 54);
+			super(title, false, 54);
 		}
 
-	}
-
-	public enum Post {
-		Leader, Officer, Member
 	}
 }
