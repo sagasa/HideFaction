@@ -5,5 +5,5 @@ import java.util.UUID;
 
 public class FactionManager {
 
-	private Map<UUID, FactionPermission> permissonLevel;
+	private Map<UUID, FactionRank> permissonLevel;
 }

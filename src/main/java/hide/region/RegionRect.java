@@ -1,43 +1,75 @@
 package hide.region;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
+import org.apache.logging.log4j.util.Strings;
 
 import com.google.gson.annotations.SerializedName;
 
+import hide.core.HideFaction;
 import hide.region.RegionManager.ChunkRegingMap;
+import hide.util.HideByteBufUtil;
+import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 /**始点と終点を指定したレギオンの最小単位*/
-public class RegionRect {
+public class RegionRect implements IMessage {
 
 	@SerializedName("StartPos")
-	private Vec3i _start;
+	private Vec3i _start = Vec3i.NULL_VECTOR;
+	@SerializedName("EndPos")
+	private Vec3i _end = Vec3i.NULL_VECTOR;
 
-	private Vec3i _end;
+	@SerializedName("RuleName")
+	private String _ruleName = Strings.EMPTY;
 
-	/**大きいほうが優先*/
-	private int _priority = 0;
+	private transient RegionRule _rule;
 
-	private String _target;
-
-	private Function<EntityPlayer, Boolean> bool;
-
-	private Map<EnumRegionPermission, EnumPermissionState> _permission = new HashMap<>();
+	@SerializedName("Tag")
+	private String _tag = Strings.EMPTY;
 
 	/**2点を設定 チェック掛けるから制約はなし*/
 	public RegionRect setPos(Vec3i start, Vec3i end) {
 		_start = start;
 		_end = end;
-		checkPos();
+		checkValue();
 		return this;
 	}
 
-	/**start<endになるように調整*/
-	protected void checkPos() {
+	public RegionRect setTag(String name) {
+		_tag = name;
+		return this;
+	}
+
+	public String getTag() {
+		return _tag;
+	}
+
+	public RegionRect setRuleName(String name) {
+		_ruleName = name;
+		checkValue();
+		//定義があっても代入されていなければ警告
+		if (Strings.isNotBlank(_ruleName) && _rule == null)
+			HideFaction.getLog().warn("rule [" + _ruleName + "] does not exist");
+		return this;
+	}
+
+	public String getRuleName() {
+		return _ruleName;
+	}
+
+	public RegionRule getRule() {
+		return _rule;
+	}
+
+	public boolean haveRule() {
+		return _rule != null;
+	}
+
+	/**start<endになるように調整+Ruleの実態を代入*/
+	public void checkValue() {
 		if (_end.getX() < _start.getX()) {
 			Vec3i start = new Vec3i(_end.getX(), _start.getY(), _start.getZ());
 			_end = new Vec3i(_start.getX(), _end.getY(), _end.getZ());
@@ -53,6 +85,9 @@ public class RegionRect {
 			_end = new Vec3i(_end.getX(), _end.getY(), _start.getZ());
 			_start = start;
 		}
+		//ルール名があったら探す
+		if (Strings.isNotBlank(_ruleName))
+			_rule = RegionManager.RuleMap.get(_ruleName);
 	}
 
 	public boolean contain(Vec3i vec) {
@@ -73,45 +108,29 @@ public class RegionRect {
 		}
 	}
 
-	public void setPriority(int value) {
-		_priority = value;
-	}
-
-	public int getPriority() {
-		return _priority;
-	}
-
-	private static String empty = "";
-
-	private boolean isTarget(EntityPlayer player) {
-		return false;
-	}
-
 	public EnumPermissionState checkPermission(EnumRegionPermission regionPermission, EntityPlayer player) {
-		if (_target.length() != 0 && player.world != null && player.world.getScoreboard().getPlayersTeam(player.getName()) != null && player.world.getScoreboard().getPlayersTeam(player.getName()).getName().equals(_target))
-			return _permission.getOrDefault(regionPermission, EnumPermissionState.NONE);
-		return EnumPermissionState.NONE;
+		return _rule == null ? EnumPermissionState.NONE : _rule.checkPermission(regionPermission, player);
 	}
 
-	/*
-	@SideOnly(Side.CLIENT)
-	static class Deserializer implements JsonDeserializer<RegionRect>, JsonSerializer<RegionRect> {
-		public RegionRect deserialize(JsonElement p_deserialize_1_, Type p_deserialize_2_, JsonDeserializationContext p_deserialize_3_) throws JsonParseException {
-			JsonObject jsonobject = p_deserialize_1_.getAsJsonObject();
-			ResourceLocation resourcelocation = new ResourceLocation(JsonUtils.getString(jsonobject, "model"));
-			Map<ResourceLocation, Float> map = this.makeMapResourceValues(jsonobject);
-			return new RegionRect(resourcelocation, map);
-		}
+	@Override
+	public String toString() {
+		return "[from : " + _start + ", to : " + _end + ", tag : " + _tag + ", rule : " + _ruleName + "]";
+	}
 
-		protected Map<ResourceLocation, Float> makeMapResourceValues(JsonObject p_188025_1_) {
-			Map<ResourceLocation, Float> map = Maps.<ResourceLocation, Float> newLinkedHashMap();
-			JsonObject jsonobject = JsonUtils.getJsonObject(p_188025_1_, "predicate");
+	@Override
+	public void fromBytes(ByteBuf buf) {
+		_start = HideByteBufUtil.readVec3i(buf);
+		_end = HideByteBufUtil.readVec3i(buf);
+		_ruleName = ByteBufUtils.readUTF8String(buf);
+		_tag = ByteBufUtils.readUTF8String(buf);
+		checkValue();
+	}
 
-			for (Entry<String, JsonElement> entry : jsonobject.entrySet()) {
-				map.put(new ResourceLocation(entry.getKey()), Float.valueOf(JsonUtils.getFloat(entry.getValue(), entry.getKey())));
-			}
-
-			return map;
-		}
-	}//*/
+	@Override
+	public void toBytes(ByteBuf buf) {
+		HideByteBufUtil.writeVec3i(buf, _start);
+		HideByteBufUtil.writeVec3i(buf, _end);
+		ByteBufUtils.writeUTF8String(buf, _ruleName);
+		ByteBufUtils.writeUTF8String(buf, _tag);
+	}
 }
