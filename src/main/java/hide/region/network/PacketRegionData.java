@@ -19,6 +19,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionData, IMessage> {
 
@@ -115,17 +116,21 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 	public IMessage onMessage(PacketRegionData msg, MessageContext ctx) {
 		//受信したデータで上書き
 		if (ctx.side == Side.CLIENT) {
-			switch (msg.mode) {
-			case REGION_LIST:
-				RegionManager.getManager(Minecraft.getMinecraft().world).RegionList = msg.regionList;
-				RegionManager.getManager(Minecraft.getMinecraft().world).registerRegionMap();
-				System.out.println("OVER " + msg.regionList);
-				break;
-			default:
-				break;
-			}
+			onMsg(msg);
 		}
 		return null;
+	}
+	@SideOnly(Side.CLIENT)
+	private void onMsg(PacketRegionData msg) {
+		switch (msg.mode) {
+		case REGION_LIST:
+			RegionManager.getManager(Minecraft.getMinecraft().world).RegionList = msg.regionList;
+			RegionManager.getManager(Minecraft.getMinecraft().world).registerRegionMap();
+			System.out.println("OVER " + msg.regionList);
+			break;
+		default:
+			break;
+		}
 	}
 
 }

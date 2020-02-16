@@ -20,6 +20,4 @@ public class PermissionManager {
 	public static void provideRegionData(WorldServer world) {
 		world.playerEntities.forEach(PermissionManager::provideRegionData);
 	}
-
-
 }

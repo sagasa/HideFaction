@@ -16,27 +16,19 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 
 public class RegionRule implements IMessage {
-	/**大きいほうが優先*/
+	/** 大きいほうが優先 */
 	@SerializedName("Priority")
-	private int _priority = 0;
+	public int priority = 0;
 
 	@SerializedName("TargerTeam")
-	private String _targetName = "";
+	public String targetName = "";
 
-	/**この階級以上に適応*/
+	/** この階級以上に適応 */
 	@SerializedName("TargerRank")
-	private FactionRank _targetRank = FactionRank.Temporary;
+	public FactionRank targetRank = FactionRank.Temporary;
 
 	@SerializedName("Permission")
 	private Map<EnumRegionPermission, EnumPermissionState> _permission = new EnumMap(EnumRegionPermission.class);
-
-	public void setPriority(int value) {
-		_priority = value;
-	}
-
-	public int getPriority() {
-		return _priority;
-	}
 
 	public Map<EnumRegionPermission, EnumPermissionState> getMap() {
 		return _permission;
@@ -50,10 +42,9 @@ public class RegionRule implements IMessage {
 
 	public EnumPermissionState checkPermission(EnumRegionPermission regionPermission, EntityPlayer player) {
 		ScorePlayerTeam team;
-		if (Strings.isBlank(_targetName) ||
-				(player.world != null &&
-						((team = player.world.getScoreboard().getPlayersTeam(player.getName())) == null ||
-								team.getName().equals(_targetName)))) {//TODO パーミッションの条件が必要
+		if (Strings.isBlank(targetName) || (player.world != null
+				&& ((team = player.world.getScoreboard().getPlayersTeam(player.getName())) == null
+						|| team.getName().equals(targetName)))) {// TODO パーミッションの条件が必要
 			return _permission.getOrDefault(regionPermission, EnumPermissionState.NONE);
 		}
 		return EnumPermissionState.NONE;
@@ -61,21 +52,22 @@ public class RegionRule implements IMessage {
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		_priority = buf.readInt();
-		_targetName = ByteBufUtils.readUTF8String(buf);
-		_targetRank = FactionRank.values()[buf.readByte()];
+		priority = buf.readInt();
+		targetName = ByteBufUtils.readUTF8String(buf);
+		targetRank = FactionRank.values()[buf.readByte()];
 		byte size = buf.readByte();
 		_permission = new EnumMap<>(EnumRegionPermission.class);
 		for (int i = 0; i < size; i++) {
-			_permission.put(EnumRegionPermission.values()[buf.readByte()], EnumPermissionState.values()[buf.readByte()]);
+			_permission.put(EnumRegionPermission.values()[buf.readByte()],
+					EnumPermissionState.values()[buf.readByte()]);
 		}
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		buf.writeInt(_priority);
-		ByteBufUtils.writeUTF8String(buf, _targetName);
-		buf.writeByte(_targetRank.getIndex());
+		buf.writeInt(priority);
+		ByteBufUtils.writeUTF8String(buf, targetName);
+		buf.writeByte(targetRank.getIndex());
 		buf.writeByte(_permission.size());
 		for (Entry<EnumRegionPermission, EnumPermissionState> entry : _permission.entrySet()) {
 			buf.writeByte(entry.getKey().getIndex());

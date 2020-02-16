@@ -11,6 +11,7 @@ import hide.region.RegionManager;
 import hide.region.RegionRect;
 import hide.region.RegionRule;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -18,8 +19,9 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
-/**変更配信パケット クライアントから受信した場合他のプレイヤーに配信*/
+/** 変更配信パケット クライアントから受信した場合他のプレイヤーに配信 */
 public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionEdit, IMessage> {
 
 	private static final byte MASK_OPERATOR = 0xF;
@@ -52,7 +54,7 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 	private String name;
 	private RegionRule rule;
 
-	/**EditもAddで*/
+	/** EditもAddで */
 	public static PacketRegionEdit addRule(String name, RegionRule value) {
 		PacketRegionEdit packet = new PacketRegionEdit((byte) (ADD | RULE_MAP));
 		packet.name = name;
@@ -99,15 +101,15 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 			}
 		} else if ((mode & MASK_TARGET) == RULE_MAP) {
 			ByteBufUtils.writeUTF8String(buf, name);
-			//remove時はvalueは無い
+			// remove時はvalueは無い
 			if ((mode & MASK_OPERATOR) != REMOVE)
 				rule.toBytes(buf);
 		} else if ((mode & MASK_TARGET) == REGION_LIST) {
-			//add時はindexは無い
+			// add時はindexは無い
 			if ((mode & MASK_OPERATOR) != ADD) {
 				buf.writeByte(index);
 			}
-			//remove時はvalueは無い
+			// remove時はvalueは無い
 			if ((mode & MASK_OPERATOR) != REMOVE) {
 				region.toBytes(buf);
 			}
@@ -121,21 +123,22 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 			byte size = buf.readByte();
 			defaultRule = new EnumMap<>(EnumRegionPermission.class);
 			for (int i = 0; i < size; i++) {
-				defaultRule.put(EnumRegionPermission.values()[buf.readByte()], EnumPermissionState.values()[buf.readByte()]);
+				defaultRule.put(EnumRegionPermission.values()[buf.readByte()],
+						EnumPermissionState.values()[buf.readByte()]);
 			}
 		} else if ((mode & MASK_TARGET) == RULE_MAP) {
 			name = ByteBufUtils.readUTF8String(buf);
-			//remove時はvalueは無い
+			// remove時はvalueは無い
 			if ((mode & MASK_OPERATOR) != REMOVE) {
 				rule = new RegionRule();
 				rule.fromBytes(buf);
 			}
 		} else if ((mode & MASK_TARGET) == REGION_LIST) {
-			//add時はindexは無い
+			// add時はindexは無い
 			if ((mode & MASK_OPERATOR) != ADD) {
 				index = buf.readByte();
 			}
-			//remove時はvalueは無い
+			// remove時はvalueは無い
 			if ((mode & MASK_OPERATOR) != REMOVE) {
 				region = new RegionRect();
 				region.fromBytes(buf);
@@ -145,29 +148,61 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 
 	@Override
 	public IMessage onMessage(PacketRegionEdit msg, MessageContext ctx) {
-		//サーバー側で受信したら全体に返信
+		// サーバー側で受信したら全体に返信
 
 		if (ctx.side == Side.SERVER) {
 			EntityPlayer player = ctx.getServerHandler().player;
 			RegionManager rm = RegionManager.getManager(player.world);
-
 			player.getServer().addScheduledTask(() -> {
 				if ((mode & MASK_TARGET) == DEFAULT_RULE) {
 					rm.DefaultPermission = msg.defaultRule;
 				} else if ((mode & MASK_TARGET) == RULE_MAP) {
-					if ((mode & MASK_OPERATOR) == ADD) {
+					if ((mode & MASK_OPERATOR) == ADD)
 						rm.RuleMap.put(name, rule);
-						rm.registerRegionMap();
-					}
+					else if ((mode & MASK_OPERATOR) == REMOVE)
+						rm.RuleMap.remove(name);
+					rm.registerRegionMap();
+				} else if ((mode & MASK_TARGET) == REGION_LIST) {
+					if ((mode & MASK_OPERATOR) == EDIT)
+						rm.RegionList.set(index, region);
+					else if ((mode & MASK_OPERATOR) == ADD)
+						rm.RegionList.add(region);
+					else if ((mode & MASK_OPERATOR) == REMOVE)
+						rm.RegionList.remove(index);
+					rm.registerRegionMap();
 				}
-				//受信元以外に配信
+				// 受信元以外に配信
 				for (EntityPlayer p : player.world.playerEntities)
 					if (p != player)
 						HideFaction.NETWORK.sendTo(msg, (EntityPlayerMP) p);
-
 			});
+		} else {
+			onMsg(msg);
 		}
-
 		return null;
+	}
+	@SideOnly(Side.CLIENT)
+	private void onMsg(PacketRegionEdit msg) {
+		EntityPlayer player = Minecraft.getMinecraft().player;
+		RegionManager rm = RegionManager.getManager(player.world);
+		Minecraft.getMinecraft().addScheduledTask(() -> {
+			if ((mode & MASK_TARGET) == DEFAULT_RULE) {
+				rm.DefaultPermission = msg.defaultRule;
+			} else if ((mode & MASK_TARGET) == RULE_MAP) {
+				if ((mode & MASK_OPERATOR) == ADD)
+					rm.RuleMap.put(name, rule);
+				else if ((mode & MASK_OPERATOR) == REMOVE)
+					rm.RuleMap.remove(name);
+				rm.registerRegionMap();
+			} else if ((mode & MASK_TARGET) == REGION_LIST) {
+				if ((mode & MASK_OPERATOR) == EDIT)
+					rm.RegionList.set(index, region);
+				else if ((mode & MASK_OPERATOR) == ADD)
+					rm.RegionList.add(region);
+				else if ((mode & MASK_OPERATOR) == REMOVE)
+					rm.RegionList.remove(index);
+				rm.registerRegionMap();
+			}
+		});
 	}
 }

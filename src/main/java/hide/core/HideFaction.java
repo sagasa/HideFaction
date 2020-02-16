@@ -1,7 +1,6 @@
 package hide.core;
 
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.opengl.GL11;
 
 import hide.core.gui.FactionGUIHandler;
 import hide.core.network.PacketSimpleCmd;
@@ -10,12 +9,8 @@ import hide.region.EnumRegionPermission;
 import hide.region.RegionCommand;
 import hide.region.RegionManager;
 import hide.region.network.PacketRegionData;
+import hide.region.network.PacketRegionEdit;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderGlobal;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -58,17 +53,18 @@ public class HideFaction {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		logger = event.getModLog();
-		//ネットワーク系
+		// ネットワーク系
 		/*
-		 * IMesssageHandlerクラスとMessageクラスの登録。
-		 * 第三引数：MessageクラスのMOD内での登録ID。256個登録できる
+		 * IMesssageHandlerクラスとMessageクラスの登録。 第三引数：MessageクラスのMOD内での登録ID。256個登録できる
 		 * 第四引数：送り先指定。クライアントかサーバーか、Side.CLIENT Side.SERVER
 		 */
 		NETWORK.registerMessage(PacketSimpleCmd.class, PacketSimpleCmd.class, 0, Side.SERVER);
 		NETWORK.registerMessage(PacketSimpleCmd.class, PacketSimpleCmd.class, 1, Side.CLIENT);
 
-		NETWORK.registerMessage(PacketRegionData.class, PacketRegionData.class, 2, Side.SERVER);
 		NETWORK.registerMessage(PacketRegionData.class, PacketRegionData.class, 3, Side.CLIENT);
+
+		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 4, Side.SERVER);
+		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 5, Side.CLIENT);
 	}
 
 	@EventHandler
@@ -99,21 +95,23 @@ public class HideFaction {
 		}
 	}
 
-	/**クライアントのアニメーションをキャンセル*/
+	/** クライアントのアニメーションをキャンセル */
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void leftClick(LeftClickBlock event) {
 		if (event.getSide() == Side.CLIENT) {
-			if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.BlockDestroy)) {
+			if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getEntityPlayer(),
+					EnumRegionPermission.BlockDestroy)) {
 				event.setCanceled(true);
 			}
 		}
 
 	}
 
-	/**サーバー側で破壊をキャンセル*/
+	/** サーバー側で破壊をキャンセル */
 	@SubscribeEvent(priority = EventPriority.LOWEST)
 	public void leftClick(BreakEvent event) {
-		if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getPlayer(), EnumRegionPermission.BlockDestroy)) {
+		if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getPlayer(),
+				EnumRegionPermission.BlockDestroy)) {
 			event.setCanceled(true);
 		}
 
@@ -132,46 +130,12 @@ public class HideFaction {
 		}
 	}
 
-	private static double larp(double min, double max, float value) {
-		return min + (max - min) * value;
-	}
-
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent()
 	public void onEvent(RenderWorldLastEvent event) {
+		RegionManager.getManager(Minecraft.getMinecraft().world).RegionList
+				.forEach(rg -> rg.drawRegionRect(event.getPartialTicks()));
 
-		Minecraft mc = Minecraft.getMinecraft();
-		double x = larp(mc.player.prevPosX, mc.player.posX, event.getPartialTicks());
-		double y = larp(mc.player.prevPosY, mc.player.posY, event.getPartialTicks());
-		double z = larp(mc.player.prevPosZ, mc.player.posZ, event.getPartialTicks());
-
-		GlStateManager.translate(-x, -y, -z);
-
-		GlStateManager.pushMatrix();
-
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-
-		GlStateManager.disableTexture2D();
-		GlStateManager.enableBlend();
-		GlStateManager.disableCull();
-		//GL11.glColor4ub(1,0, 0, 0.2F);
-		Tessellator tessellator = Tessellator.getInstance();
-		BufferBuilder buf = tessellator.getBuffer();
-
-		RenderGlobal.drawBoundingBox(-1, -1, -1, 120, 300, 1, 0.8f, 1f, 0f, 0.2f);
-
-		buf.begin(GL11.GL_TRIANGLE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-
-		RenderGlobal.addChainedFilledBoxVertices(buf, -1, -1, -1, 120, 300, 1, 0.8f, 1f, 0f, 0.15f);
-		tessellator.draw();
-		GlStateManager.disableBlend();
-		GlStateManager.enableTexture2D();
-		GlStateManager.enableCull();
-
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-
-		GlStateManager.popMatrix();
-
-		//	GlStateManager.enableDepth();
+		// GlStateManager.enableDepth();
 	}
 }
