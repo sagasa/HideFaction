@@ -17,7 +17,6 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
@@ -122,7 +121,7 @@ public class HideFaction {
 
 	@SubscribeEvent
 	public void onEvent(PlayerLoggedInEvent event) {
-		NETWORK.sendTo(PacketRegionData.regionList(RegionManager.getManager(event.player.world)), (EntityPlayerMP) event.player);
+
 	}
 
 	@SideOnly(Side.CLIENT)
