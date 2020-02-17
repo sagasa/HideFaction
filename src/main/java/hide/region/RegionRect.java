@@ -134,7 +134,7 @@ public class RegionRect implements IMessage {
 	private static List<String> drawArray = new ArrayList<>();
 
 	@SideOnly(Side.CLIENT)
-	public void drawRegionRect(float partialTicks) {
+	public void drawRegionRect(boolean showInfo, float partialTicks, float r, float g, float b) {
 		// プレイヤー座標
 		double pX = HideMath.larp(mc.player.prevPosX, mc.player.posX, partialTicks) - _start.getX();
 		double pY = HideMath.larp(mc.player.prevPosY, mc.player.posY, partialTicks) - _start.getY();
@@ -144,7 +144,7 @@ public class RegionRect implements IMessage {
 		// startを原点とする座標に
 		GlStateManager.translate(-pX, -pY, -pZ);
 
-		//プレイヤーの視点位置に
+		// プレイヤーの視点位置に
 		pY += mc.player.eyeHeight;
 
 		GlStateManager.pushMatrix();
@@ -158,46 +158,47 @@ public class RegionRect implements IMessage {
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buf = tessellator.getBuffer();
 		GL11.glLineWidth(3);
-		RenderGlobal.drawBoundingBox(0, 0, 0, _end.getX(), _end.getY(), _end.getZ(), 0.8f, 1f, 0f, 0.5f);
+		RenderGlobal.drawBoundingBox(0, 0, 0, _end.getX(), _end.getY(), _end.getZ(), r, g, b, 0.5f);
 
 		buf.begin(GL11.GL_TRIANGLE_STRIP, DefaultVertexFormats.POSITION_COLOR);
 
-		RenderGlobal.addChainedFilledBoxVertices(buf, 0, 0, 0, _end.getX(), _end.getY(), _end.getZ(), 0.8f, 1f, 0f,
-				0.15f);
+		RenderGlobal.addChainedFilledBoxVertices(buf, 0, 0, 0, _end.getX(), _end.getY(), _end.getZ(), r, g, b, 0.15f);
 		tessellator.draw();
 		GlStateManager.disableBlend();
 		GlStateManager.enableTexture2D();
 		GlStateManager.enableCull();
 
 		final int textColor = 0xFFFFFF;
-		drawString(makeVecString(_start), 0, 0, 0, pX, pY, pZ, textColor);
-		drawString(makeVecString(_end), _end.getX(), _end.getY(), _end.getZ(), pX, pY, pZ, textColor);
+		if (showInfo) {
+			drawString(makeVecString(_start), 0, 0, 0, pX, pY, pZ, textColor);
+			drawString(makeVecString(_end), _end.getX(), _end.getY(), _end.getZ(), pX, pY, pZ, textColor);
 
-		// 中央に描画するリスト
-		drawArray.clear();
-		for (String str : _tag) {
-			drawArray.add(str);
-		}
-		drawArray.add("RuleName : " + _ruleName);
-		drawArray.add("Priority : " + _rule.priority);
-		if(Strings.isNotBlank(_rule.targetName)) {
-			drawArray.add("Target : " + _rule.targetName);
-			drawArray.add("Rank : " + _rule.targetRank);
-		}
-		for (Entry<EnumRegionPermission, EnumPermissionState> entry : _rule.getMap().entrySet()) {
-			drawArray.add(entry.getKey() + " : " + entry.getValue());
-		}
+			// 中央に描画するリスト
+			drawArray.clear();
+			for (String str : _tag) {
+				drawArray.add(str);
+			}
+			drawArray.add("RuleName : " + _ruleName);
+			drawArray.add("Priority : " + _rule.priority);
+			if (Strings.isNotBlank(_rule.targetName)) {
+				drawArray.add("Target : " + _rule.targetName);
+				drawArray.add("Rank : " + _rule.targetRank);
+			}
+			for (Entry<EnumRegionPermission, EnumPermissionState> entry : _rule.getMap().entrySet()) {
+				drawArray.add(entry.getKey() + " : " + entry.getValue());
+			}
 
-		float x = _end.getX() / 2;
-		float y = _end.getY() / 2;
-		float z = _end.getZ() / 2;
+			float x = _end.getX() / 2;
+			float y = _end.getY() / 2;
+			float z = _end.getZ() / 2;
 
-		float space = distance(x, y, z, pX, pY, pZ)/10;
+			float space = distance(x, y, z, pX, pY, pZ) / 10;
 
-		y += drawArray.size() / 2 * space;
-		for (String str : drawArray) {
-			drawString(str, x, y, z, pX, pY, pZ, textColor);
-			y -= space;
+			y += drawArray.size() / 2 * space;
+			for (String str : drawArray) {
+				drawString(str, x, y, z, pX, pY, pZ, textColor);
+				y -= space;
+			}
 		}
 
 		GlStateManager.enableDepth();
@@ -229,7 +230,8 @@ public class RegionRect implements IMessage {
 
 		GlStateManager.translate(mc.fontRenderer.getStringWidth(str) / -2, mc.fontRenderer.FONT_HEIGHT / -2, 0);
 
-		DrawUtil.drawRect(-2,-2,mc.fontRenderer.getStringWidth(str)+1, mc.fontRenderer.FONT_HEIGHT, 0.5f, 0.5f, 0.5f, 0.4f);
+		DrawUtil.drawRect(-2, -2, mc.fontRenderer.getStringWidth(str) + 1, mc.fontRenderer.FONT_HEIGHT, 0.5f, 0.5f,
+				0.5f, 0.4f);
 		mc.fontRenderer.drawString(str, 0, 0, color);
 
 		GlStateManager.popMatrix();

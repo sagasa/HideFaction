@@ -134,7 +134,7 @@ public class HideFaction {
 	@SubscribeEvent()
 	public void onEvent(RenderWorldLastEvent event) {
 		RegionManager.getManager(Minecraft.getMinecraft().world).RegionList
-				.forEach(rg -> rg.drawRegionRect(event.getPartialTicks()));
+				.forEach(rg -> rg.drawRegionRect(true,event.getPartialTicks(),0.8f,1f,0));
 
 		// GlStateManager.enableDepth();
 	}
