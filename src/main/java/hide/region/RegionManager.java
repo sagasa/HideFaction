@@ -18,11 +18,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /** ワールド紐づけ ブロックからレギオンへの高速検索システム サーバー側のみ */
 public class RegionManager {
@@ -89,13 +92,57 @@ public class RegionManager {
 			chunkMap.get(pos).add(rect);
 		}
 
-		public RegionRect getRegion(BlockPos pos, String tag) {
+		public RegionRect[] getRegions(BlockPos pos) {
 			ChunkPos cPos = new ChunkPos(pos);
 			if (!chunkMap.containsKey(cPos))
 				return null;
-			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos) && (tag == null || tag.equals(rg.getTag())))
+			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos)).toArray(RegionRect[]::new);
+		}
+
+		/**タグ全一致のみ*/
+		public RegionRect getRegionAnd(BlockPos pos, String... tag) {
+			ChunkPos cPos = new ChunkPos(pos);
+			if (!chunkMap.containsKey(cPos))
+				return null;
+			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos) && (tag == null || andSerch(tag, rg.getTag())))
 					.findFirst().orElse(null);
 		}
+
+		/**タグのどれかが一致*/
+		public RegionRect getRegionOr(BlockPos pos, String... tag) {
+			ChunkPos cPos = new ChunkPos(pos);
+			if (!chunkMap.containsKey(cPos))
+				return null;
+			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos) && (tag == null || orSerch(tag, rg.getTag())))
+					.findFirst().orElse(null);
+		}
+	}
+
+	private static boolean andSerch(String[] input, String[] target) {
+		for (String in : input) {
+			boolean flag = true;
+			tLoop: for (String tar : target) {
+				if (tar.equals(in)) {
+					flag = false;
+					break tLoop;
+				}
+			}
+			//見つからなかった場合false
+			if (flag)
+				return false;
+		}
+		return true;
+	}
+
+	private static boolean orSerch(String[] input, String[] target) {
+		for (String in : input) {
+			for (String tar : target) {
+				if (tar.equals(in)) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/** チャンク-レギオンリストのMap ルールがついてるレギオンのみ利用 */
@@ -132,6 +179,10 @@ public class RegionManager {
 	// ====== マネージャの格納系 ======
 	private static Map<World, RegionManager> managerMap = new HashMap<>();
 
+	@SideOnly(Side.CLIENT)
+	public static RegionManager getManager() {
+		return getManager(Minecraft.getMinecraft().world);
+	}
 	public static RegionManager getManager(World world) {
 		// Mapにあったらそれを返す
 		RegionManager rm = managerMap.get(world);

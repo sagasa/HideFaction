@@ -1,5 +1,7 @@
 package hide.region.gui;
 
+import hide.region.RegionManager;
+import hide.region.RegionRect;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -10,7 +12,10 @@ public class RegionEditor {
 	private int index = -1;
 
 	public void draw(float partialTicks) {
+		RegionManager rm = RegionManager.getManager();
+		for (RegionRect rg : rm.RegionList) {
 
+		}
 	}
 
 	public void select() {
