@@ -13,6 +13,14 @@ public class RegionEditor {
 
 	public void draw(float partialTicks) {
 		RegionManager rm = RegionManager.getManager();
+		for (int i = 0; i < rm.RegionList.size(); i++) {
+			//選択中なら
+			if(i==index)
+				rm.RegionList.get(i).drawRegionRect(true, partialTicks,0.8f,1f,0);
+			else
+				rm.RegionList.get(i).drawRegionRect(false, partialTicks,0.5f,1f,0.5f);
+
+		}
 		for (RegionRect rg : rm.RegionList) {
 
 		}

@@ -117,7 +117,7 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 		//受信したデータで上書き
 		if (ctx.side == Side.CLIENT) {
 			onMsg(msg);
-		}
+		}//TODO サーバー側で受信時に全員に配信
 		return null;
 	}
 	@SideOnly(Side.CLIENT)

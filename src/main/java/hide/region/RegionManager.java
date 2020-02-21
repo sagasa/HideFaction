@@ -50,11 +50,16 @@ public class RegionManager {
 		region.setPos(new Vec3i(-8, 20, -8), new Vec3i(8, 30, 8));
 		region.setRuleName("test");
 		RegionList.add(region);
+		region = new RegionRect();
+		region.setPos(new Vec3i(-20, 20, -8), new Vec3i(-10, 30, 8));
+		region.setRuleName("test");
+		RegionList.add(region);
 		registerRegionMap();
 	}
 
 	/** レジストリに登録 */
 	public void registerRegionMap() {
+		System.out.println("registr "+RegionList);
 		RegionList.forEach(rg -> rg.checkValue());
 		_ruleRegionMap.clear();
 		_areaRegionMap.clear();
@@ -189,7 +194,7 @@ public class RegionManager {
 		if (rm != null)
 			return rm;
 
-		System.out.println("MANAGET NOT FOUND " + world);
+		System.out.println("MANAGER NOT FOUND " + world);
 		// リモートならあきらめる
 		if (world.isRemote) {
 			rm = new RegionManager();

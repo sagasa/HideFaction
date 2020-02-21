@@ -8,9 +8,9 @@ import hide.faction.command.Faction;
 import hide.region.EnumRegionPermission;
 import hide.region.RegionCommand;
 import hide.region.RegionManager;
+import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
 import hide.region.network.PacketRegionEdit;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -20,6 +20,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
@@ -119,7 +120,13 @@ public class HideFaction {
 
 	@SubscribeEvent
 	public void onEvent(PlayerLoggedInEvent event) {
+		//鯖からレギオンデータを配信する
+		System.out.println("Login");
 
+	}
+
+	@SubscribeEvent
+	public void onEvent(WorldEvent.Load event) {
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -131,11 +138,13 @@ public class HideFaction {
 	}
 
 	@SideOnly(Side.CLIENT)
+	private static RegionEditor regionEditor = new RegionEditor();
+	@SideOnly(Side.CLIENT)
 	@SubscribeEvent()
 	public void onEvent(RenderWorldLastEvent event) {
-		RegionManager.getManager(Minecraft.getMinecraft().world).RegionList
-				.forEach(rg -> rg.drawRegionRect(true,event.getPartialTicks(),0.8f,1f,0));
-
+		//RegionManager.getManager(Minecraft.getMinecraft().world).RegionList
+		//		.forEach(rg -> rg.drawRegionRect(true,event.getPartialTicks(),0.8f,1f,0));
+		regionEditor.draw(event.getPartialTicks());
 		// GlStateManager.enableDepth();
 	}
 }
