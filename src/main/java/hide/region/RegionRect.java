@@ -216,6 +216,7 @@ public class RegionRect implements IMessage {
 		return MathHelper.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
 	}
 
+	@SideOnly(Side.CLIENT)
 	private static void drawString(String str, float x, float y, float z, double offX, double offY, double offZ,
 			int color) {
 		float scale = distance(x, y, z, offX, offY, offZ) / 150;
@@ -237,6 +238,7 @@ public class RegionRect implements IMessage {
 		GlStateManager.popMatrix();
 	}
 
+	@SideOnly(Side.CLIENT)
 	private static void dot(double x, double y, double z) {
 		GlStateManager.pushMatrix();
 

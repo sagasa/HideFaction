@@ -1,6 +1,8 @@
 package hide.region;
 
 import hide.core.HideFaction;
+import hide.core.network.PacketSimpleCmd;
+import hide.core.network.PacketSimpleCmd.Cmd;
 import hide.region.network.PacketRegionData;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -8,6 +10,8 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 /**パーミッション系の同期等*/
 public class PermissionManager {
@@ -28,9 +32,11 @@ public class PermissionManager {
 
 	}
 
+	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
-	public void onLoadWorld(WorldEvent.Load event) {
-
+	public void onEvent(WorldEvent.Load event) {
+		if(event.getWorld().isRemote)
+			HideFaction.NETWORK.sendToServer(new PacketSimpleCmd(Cmd.RegionDataReq));
 	}
 
 

@@ -2,6 +2,7 @@ package hide.core.network;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import hide.region.PermissionManager;
 import hide.region.gui.RegionEditGUI;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -14,7 +15,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class PacketSimpleCmd implements IMessage, IMessageHandler<PacketSimpleCmd, IMessage> {
 
 	public enum Cmd {
-		S, OpenRegionGUI;
+		S, OpenRegionGUI,RegionDataReq;
 	}
 
 	public PacketSimpleCmd() {
@@ -41,6 +42,8 @@ public class PacketSimpleCmd implements IMessage, IMessageHandler<PacketSimpleCm
 		System.out.println("Reseve " + msg.value);
 		if (msg.value == Cmd.OpenRegionGUI) {
 			openRegionGUI();
+		}else if (msg.value == Cmd.RegionDataReq) {
+			PermissionManager.provideRegionData(ctx.getServerHandler().player);
 		}
 		return null;
 	}

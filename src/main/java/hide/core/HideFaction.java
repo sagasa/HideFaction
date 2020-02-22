@@ -6,6 +6,7 @@ import hide.core.gui.FactionGUIHandler;
 import hide.core.network.PacketSimpleCmd;
 import hide.faction.command.Faction;
 import hide.region.EnumRegionPermission;
+import hide.region.PermissionManager;
 import hide.region.RegionCommand;
 import hide.region.RegionManager;
 import hide.region.gui.RegionEditor;
@@ -20,7 +21,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
@@ -29,7 +29,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -71,6 +70,7 @@ public class HideFaction {
 	@EventHandler
 	public void construct(FMLConstructionEvent event) {
 		MinecraftForge.EVENT_BUS.register(this);
+		MinecraftForge.EVENT_BUS.register(new PermissionManager());
 	}
 
 	@EventHandler
@@ -116,17 +116,6 @@ public class HideFaction {
 			event.setCanceled(true);
 		}
 
-	}
-
-	@SubscribeEvent
-	public void onEvent(PlayerLoggedInEvent event) {
-		//鯖からレギオンデータを配信する
-		System.out.println("Login");
-
-	}
-
-	@SubscribeEvent
-	public void onEvent(WorldEvent.Load event) {
 	}
 
 	@SideOnly(Side.CLIENT)
