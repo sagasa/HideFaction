@@ -5,10 +5,8 @@ import org.apache.logging.log4j.Logger;
 import hide.core.gui.FactionGUIHandler;
 import hide.core.network.PacketSimpleCmd;
 import hide.faction.command.Faction;
-import hide.region.EnumRegionPermission;
 import hide.region.PermissionManager;
 import hide.region.RegionCommand;
-import hide.region.RegionManager;
 import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
 import hide.region.network.PacketRegionEdit;
@@ -19,15 +17,12 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
-import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
@@ -96,28 +91,6 @@ public class HideFaction {
 		}
 	}
 
-	/** クライアントのアニメーションをキャンセル */
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void leftClick(LeftClickBlock event) {
-		if (event.getSide() == Side.CLIENT) {
-			if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getEntityPlayer(),
-					EnumRegionPermission.BlockDestroy)) {
-				event.setCanceled(true);
-			}
-		}
-
-	}
-
-	/** サーバー側で破壊をキャンセル */
-	@SubscribeEvent(priority = EventPriority.LOWEST)
-	public void leftClick(BreakEvent event) {
-		if (!RegionManager.getManager(event.getWorld()).permission(event.getPos(), event.getPlayer(),
-				EnumRegionPermission.BlockDestroy)) {
-			event.setCanceled(true);
-		}
-
-	}
-
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent()
 	public void onEvent(RenderGameOverlayEvent event) {
@@ -127,13 +100,11 @@ public class HideFaction {
 	}
 
 	@SideOnly(Side.CLIENT)
-	private static RegionEditor regionEditor = new RegionEditor();
-	@SideOnly(Side.CLIENT)
 	@SubscribeEvent()
 	public void onEvent(RenderWorldLastEvent event) {
 		//RegionManager.getManager(Minecraft.getMinecraft().world).RegionList
 		//		.forEach(rg -> rg.drawRegionRect(true,event.getPartialTicks(),0.8f,1f,0));
-		regionEditor.draw(event.getPartialTicks());
+		RegionEditor.draw(event.getPartialTicks());
 		// GlStateManager.enableDepth();
 	}
 }

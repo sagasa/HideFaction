@@ -108,8 +108,8 @@ public class RegionRect implements IMessage {
 	}
 
 	public boolean contain(Vec3i vec) {
-		return _start.getX() < vec.getX() && vec.getX() < _end.getX() && _start.getY() < vec.getY()
-				&& vec.getY() < _end.getY() && _start.getZ() < vec.getZ() && vec.getZ() < _end.getZ();
+		return _start.getX() <= vec.getX() && vec.getX() < _end.getX() && _start.getY() <= vec.getY()
+				&& vec.getY() < _end.getY() && _start.getZ() <= vec.getZ() && vec.getZ() < _end.getZ();
 	}
 
 	public void register(ChunkRegingMap chunkMap) {
@@ -128,19 +128,22 @@ public class RegionRect implements IMessage {
 		return _rule == null ? EnumPermissionState.NONE : _rule.checkPermission(regionPermission, player);
 	}
 
-	@SideOnly(Side.CLIENT)
-	private static final Minecraft mc = Minecraft.getMinecraft();
-	@SideOnly(Side.CLIENT)
 	private static List<String> drawArray = new ArrayList<>();
 
 	@SideOnly(Side.CLIENT)
 	public void drawRegionRect(boolean showInfo, float partialTicks, float r, float g, float b) {
+		Minecraft mc = Minecraft.getMinecraft();
 		// プレイヤー座標
 		double pX = HideMath.larp(mc.player.prevPosX, mc.player.posX, partialTicks) - _start.getX();
 		double pY = HideMath.larp(mc.player.prevPosY, mc.player.posY, partialTicks) - _start.getY();
 		double pZ = HideMath.larp(mc.player.prevPosZ, mc.player.posZ, partialTicks) - _start.getZ();
 		float pYaw = HideMath.larp(mc.player.prevRotationYaw, mc.player.rotationYaw, partialTicks);
 		float pPitch = HideMath.larp(mc.player.prevRotationPitch, mc.player.rotationPitch, partialTicks);
+		//範囲の座標
+		double vX = _end.getX() - _start.getX();
+		double vY = _end.getY() - _start.getY();
+		double vZ = _end.getZ() - _start.getZ();
+
 		// startを原点とする座標に
 		GlStateManager.translate(-pX, -pY, -pZ);
 
@@ -158,12 +161,14 @@ public class RegionRect implements IMessage {
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buf = tessellator.getBuffer();
 		GL11.glLineWidth(3);
-		RenderGlobal.drawBoundingBox(0, 0, 0, _end.getX(), _end.getY(), _end.getZ(), r, g, b, 0.5f);
+		RenderGlobal.drawBoundingBox(0, 0, 0, vX, vY, vZ, r, g, b, 0.5f);
 
+		GlStateManager.enableDepth();
 		buf.begin(GL11.GL_TRIANGLE_STRIP, DefaultVertexFormats.POSITION_COLOR);
-
-		RenderGlobal.addChainedFilledBoxVertices(buf, 0, 0, 0, _end.getX(), _end.getY(), _end.getZ(), r, g, b, 0.15f);
+		RenderGlobal.addChainedFilledBoxVertices(buf, -0.01, -0.01, -0.01, vX + 0.01, vY + 0.01, vZ + 0.01, r, g, b, 0.3f);
 		tessellator.draw();
+		GlStateManager.disableDepth();
+
 		GlStateManager.disableBlend();
 		GlStateManager.enableTexture2D();
 		GlStateManager.enableCull();
@@ -171,7 +176,7 @@ public class RegionRect implements IMessage {
 		final int textColor = 0xFFFFFF;
 		if (showInfo) {
 			drawString(makeVecString(_start), 0, 0, 0, pX, pY, pZ, textColor);
-			drawString(makeVecString(_end), _end.getX(), _end.getY(), _end.getZ(), pX, pY, pZ, textColor);
+			drawString(makeVecString(_end), vX, vY, vZ, pX, pY, pZ, textColor);
 
 			// 中央に描画するリスト
 			drawArray.clear();
@@ -188,9 +193,9 @@ public class RegionRect implements IMessage {
 				drawArray.add(entry.getKey() + " : " + entry.getValue());
 			}
 
-			float x = _end.getX() / 2;
-			float y = _end.getY() / 2;
-			float z = _end.getZ() / 2;
+			double x = vX / 2;
+			double y = vY / 2;
+			double z = vZ / 2;
 
 			float space = distance(x, y, z, pX, pY, pZ) / 10;
 
@@ -217,8 +222,9 @@ public class RegionRect implements IMessage {
 	}
 
 	@SideOnly(Side.CLIENT)
-	private static void drawString(String str, float x, float y, float z, double offX, double offY, double offZ,
+	private static void drawString(String str, double x, double y, double z, double offX, double offY, double offZ,
 			int color) {
+		Minecraft mc = Minecraft.getMinecraft();
 		float scale = distance(x, y, z, offX, offY, offZ) / 150;
 		GlStateManager.pushMatrix();
 

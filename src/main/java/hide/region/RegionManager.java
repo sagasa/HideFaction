@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -18,12 +19,16 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -55,11 +60,16 @@ public class RegionManager {
 		region.setRuleName("test");
 		RegionList.add(region);
 		registerRegionMap();
+
+		for (EnumRegionPermission p : EnumRegionPermission.values()) {
+
+			DefaultPermission.put(p, EnumPermissionState.NONE);
+		}
 	}
 
 	/** レジストリに登録 */
 	public void registerRegionMap() {
-		System.out.println("registr "+RegionList);
+		System.out.println("registr " + RegionList);
 		RegionList.forEach(rg -> rg.checkValue());
 		_ruleRegionMap.clear();
 		_areaRegionMap.clear();
@@ -182,84 +192,95 @@ public class RegionManager {
 	public static Map<String, RegionRule> RuleMap = new HashMap<>();
 
 	// ====== マネージャの格納系 ======
-	private static Map<World, RegionManager> managerMap = new HashMap<>();
+	private static final Int2ObjectMap<RegionManager> regionManager = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
 
 	@SideOnly(Side.CLIENT)
 	public static RegionManager getManager() {
-		return getManager(Minecraft.getMinecraft().world);
+		return getManager(Minecraft.getMinecraft().player.dimension);
 	}
-	public static RegionManager getManager(World world) {
+
+	public static RegionManager getManager(int dim) {
 		// Mapにあったらそれを返す
-		RegionManager rm = managerMap.get(world);
+		RegionManager rm = regionManager.get(dim);
 		if (rm != null)
 			return rm;
 
-		System.out.println("MANAGER NOT FOUND " + world);
+		System.out.println("MANAGER NOT FOUND " + dim);
 		// リモートならあきらめる
-		if (world.isRemote) {
+		if (!Minecraft.getMinecraft().isIntegratedServerRunning()) {
 			rm = new RegionManager();
-			managerMap.put(world, rm);
 			return rm;
 		}
-
-		// 読み込みトライ
-		rm = loadRegion(world);
-		if (rm != null) {
-			managerMap.put(world, rm);
-			return rm;
-		}
-		// 作成してセーブ
 		rm = new RegionManager();
-		managerMap.put(world, rm);
-		saveRegion(rm, world);
+		// 読み込みトライ
+		if (loadRegion(rm, DimensionManager.getWorld(dim)))
+			// 欠損があればセーブ
+			saveRegion(rm, DimensionManager.getWorld(dim));
+		regionManager.put(dim, rm);
 		return rm;
 	}
 
 	private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+	private static final String regionList = "region.json";
+	private static final String defaultRule = "defaultRule.json";
+	private static final String ruleMap = "rule.json";
 
-	public static void saveRegion(RegionManager manager, World world) {
-		// リモートならnull
-		if (world.isRemote)
-			return;
-		try {
-			File file = new File(world.getSaveHandler().getWorldDirectory(), "region.json");
+	public static void saveRegion(RegionManager manager, WorldServer world) {
+		writeData(new File(world.getChunkSaveLocation(), regionList), manager.RegionList);
+		writeData(new File(world.getChunkSaveLocation(), defaultRule), manager.DefaultPermission);
+		writeData(new File(world.getSaveHandler().getWorldDirectory(), ruleMap), RuleMap);
+	}
+
+	private static void writeData(File file, Object data) {
+		try (FileWriter fileWriter = new FileWriter(file)) {
 			if (file != null) {
-				FileWriter fileWriter = new FileWriter(file);
-				gson.toJson(manager.RegionList, fileWriter);
-				fileWriter.close();
+				gson.toJson(data, fileWriter);
 			}
 		} catch (Exception exception1) {
 			exception1.printStackTrace();
 		}
 	}
 
-	public static RegionManager loadRegion(World world) {
-		// リモートならnull
-		if (world.isRemote)
-			return null;
-		try {
-			File file = new File(world.getSaveHandler().getWorldDirectory(), "region.json");
-			if (file != null && file.exists()) {
-				FileReader fileReader = new FileReader(file);
-				RegionManager rm = new RegionManager();
-				rm.RegionList = gson.fromJson(fileReader, new TypeToken<List<RegionRect>>() {
-				}.getType());
-				System.out.println(rm.RegionList + " " + file);
-				fileReader.close();
+	/**データの欠けがあればtrue*/
+	public static boolean loadRegion(RegionManager rm, WorldServer world) {
+		boolean flag = false;
+		List<RegionRect> list = readData(new File(world.getChunkSaveLocation(), regionList), new TypeToken<List<RegionRect>>() {
+		}.getType());
+		if (list != null)
+			rm.RegionList = list;
+		else
+			flag = true;
 
-				rm.registerRegionMap();
-				return rm;
-			}
+		Map<EnumRegionPermission, EnumPermissionState> defaultrule = readData(new File(world.getChunkSaveLocation(), defaultRule), new TypeToken<Map<EnumRegionPermission, EnumPermissionState>>() {
+		}.getType());
+		if (list != null)
+			rm.DefaultPermission = defaultrule;
+		else
+			flag = true;
+
+		Map<String, RegionRule> rule = readData(new File(world.getSaveHandler().getWorldDirectory(), ruleMap), new TypeToken<Map<String, RegionRule>>() {
+		}.getType());
+		if (list != null)
+			RuleMap = rule;
+		else
+			flag = true;
+		return flag;
+	}
+
+	private static <T> T readData(File file, Type type) {
+		if (file == null || !file.exists()) {
+			return null;
+		}
+		try (FileReader fileReader = new FileReader(file)) {
+			T res = gson.fromJson(fileReader, type);
 		} catch (Exception exception1) {
 			exception1.printStackTrace();
 			// 読み込み失敗時に名称変更
-			File file = new File(world.getSaveHandler().getWorldDirectory(), "region.json");
-			if (file != null && file.exists())
-				try {
-					Files.copy(file, new File(world.getSaveHandler().getWorldDirectory(), "region.json.broken"));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+			try {
+				Files.copy(file, new File(file, ".broken"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		return null;
 	}

@@ -124,8 +124,8 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 	private void onMsg(PacketRegionData msg) {
 		switch (msg.mode) {
 		case REGION_LIST:
-			RegionManager.getManager(Minecraft.getMinecraft().world).RegionList = msg.regionList;
-			RegionManager.getManager(Minecraft.getMinecraft().world).registerRegionMap();
+			RegionManager.getManager(Minecraft.getMinecraft().player.dimension).RegionList = msg.regionList;
+			RegionManager.getManager(Minecraft.getMinecraft().player.dimension).registerRegionMap();
 			System.out.println("OVER " + msg.regionList);
 			break;
 		default:

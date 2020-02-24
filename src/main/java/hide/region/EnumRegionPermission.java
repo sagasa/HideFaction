@@ -5,6 +5,8 @@ import hide.util.IEnumIndex;
 public enum EnumRegionPermission implements IEnumIndex {
 	/** ブロック破壊 */
 	BlockDestroy,
+	/** ブロック設置 */
+	BlockPlace,
 	/** プレイヤー間のダメージの可否 */
 	PvP,
 	/** プレイヤーへのダメージの可否PvPを除く */
