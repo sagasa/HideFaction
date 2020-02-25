@@ -39,15 +39,15 @@ public class HideFaction {
 	public static HideFaction INSTANCE;
 	public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel("HideFaction");
 
-	private static Logger logger;
+	public static Logger log;
 
 	public static Logger getLog() {
-		return logger;
+		return log;
 	}
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
-		logger = event.getModLog();
+		log = event.getModLog();
 		// ネットワーク系
 		/*
 		 * IMesssageHandlerクラスとMessageクラスの登録。 第三引数：MessageクラスのMOD内での登録ID。256個登録できる
@@ -72,7 +72,7 @@ public class HideFaction {
 	public void init(FMLInitializationEvent event) {
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new FactionGUIHandler());
 		// some example code
-		logger.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
+		log.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
 	}
 
 	@EventHandler

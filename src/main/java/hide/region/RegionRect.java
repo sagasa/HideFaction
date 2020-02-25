@@ -23,8 +23,11 @@ import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -105,6 +108,8 @@ public class RegionRect implements IMessage {
 		// ルール名があったら探す
 		if (Strings.isNotBlank(_ruleName))
 			_rule = RegionManager.RuleMap.get(_ruleName);
+		//コリジョン作成
+		collision = new AxisAlignedBB(new BlockPos(_start), new BlockPos(_end));
 	}
 
 	public boolean contain(Vec3i vec) {
@@ -127,6 +132,10 @@ public class RegionRect implements IMessage {
 	public EnumPermissionState checkPermission(EnumRegionPermission regionPermission, EntityPlayer player) {
 		return _rule == null ? EnumPermissionState.NONE : _rule.checkPermission(regionPermission, player);
 	}
+
+	@SideOnly(Side.CLIENT)
+	private AxisAlignedBB collision;
+	@SideOnly(Side.CLIENT)
 
 	private static List<String> drawArray = new ArrayList<>();
 
@@ -262,6 +271,13 @@ public class RegionRect implements IMessage {
 		GlStateManager.enableCull();
 
 		GlStateManager.popMatrix();
+	}
+
+	/**コリジョン
+	 * @param vecA
+	 * @param vecB */
+	public boolean isHit(Vec3d vecA, Vec3d vecB) {
+		return collision.calculateIntercept(vecA, vecB) != null;
 	}
 
 	@Override

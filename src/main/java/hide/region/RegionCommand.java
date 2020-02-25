@@ -37,6 +37,9 @@ public class RegionCommand extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		System.out.println("exc" + Arrays.toString(args) + " " + new ChunkPos(sender.getPosition()));
+
+
+
 		// ((EntityPlayer) sender.getCommandSenderEntity())
 		// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
 		// sender.getEntityWorld().getScoreboard().getTeam(teamName);

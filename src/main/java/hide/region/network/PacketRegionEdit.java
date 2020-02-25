@@ -152,7 +152,7 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 
 		if (ctx.side == Side.SERVER) {
 			EntityPlayer player = ctx.getServerHandler().player;
-			RegionManager rm = RegionManager.getManager(player.dimension);
+			RegionManager rm = RegionManager.getManager(player.dimension, Side.SERVER);
 			player.getServer().addScheduledTask(() -> {
 				if ((mode & MASK_TARGET) == DEFAULT_RULE) {
 					rm.DefaultPermission = msg.defaultRule;
@@ -181,10 +181,10 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 		}
 		return null;
 	}
+
 	@SideOnly(Side.CLIENT)
 	private void onMsg(PacketRegionEdit msg) {
-		EntityPlayer player = Minecraft.getMinecraft().player;
-		RegionManager rm = RegionManager.getManager(player.dimension);
+		RegionManager rm = RegionManager.getManager();
 		Minecraft.getMinecraft().addScheduledTask(() -> {
 			if ((mode & MASK_TARGET) == DEFAULT_RULE) {
 				rm.DefaultPermission = msg.defaultRule;

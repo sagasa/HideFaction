@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import hide.core.HideFaction;
 import hide.region.EnumPermissionState;
 import hide.region.EnumRegionPermission;
 import hide.region.RegionManager;
 import hide.region.RegionRect;
 import hide.region.RegionRule;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -117,20 +117,30 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 		//受信したデータで上書き
 		if (ctx.side == Side.CLIENT) {
 			onMsg(msg);
-		}//TODO サーバー側で受信時に全員に配信
+		} //TODO サーバー側で受信時に全員に配信
 		return null;
 	}
+
 	@SideOnly(Side.CLIENT)
 	private void onMsg(PacketRegionData msg) {
 		switch (msg.mode) {
 		case REGION_LIST:
-			RegionManager.getManager(Minecraft.getMinecraft().player.dimension).RegionList = msg.regionList;
-			RegionManager.getManager(Minecraft.getMinecraft().player.dimension).registerRegionMap();
-			System.out.println("OVER " + msg.regionList);
+			RegionManager.getManager().RegionList = msg.regionList;
+			RegionManager.getManager().registerRegionMap();
+			HideFaction.log.info("receive RegionList from server");
+			break;
+		case DEFAULT_RULE:
+			RegionManager.getManager().DefaultPermission = msg.defaultMap;
+			RegionManager.getManager().registerRegionMap();
+			HideFaction.log.info("receive DefaultRule from server");
+			break;
+		case RULE_MAP:
+			RegionManager.RuleMap = msg.ruleMap;
+			RegionManager.getManager().registerRegionMap();
+			HideFaction.log.info("receive RuleMap from server");
 			break;
 		default:
 			break;
 		}
 	}
-
 }

@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import hide.core.HideFaction;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
@@ -59,6 +60,7 @@ public class RegionManager {
 		region.setPos(new Vec3i(-20, 20, -8), new Vec3i(-10, 30, 8));
 		region.setRuleName("test");
 		RegionList.add(region);
+		System.out.println("NEW INSTANCE");
 		registerRegionMap();
 
 		for (EnumRegionPermission p : EnumRegionPermission.values()) {
@@ -70,11 +72,12 @@ public class RegionManager {
 	/** レジストリに登録 */
 	public void registerRegionMap() {
 		System.out.println("registr " + RegionList);
+		//通知
+		listenerList.forEach(r -> r.run());
 		RegionList.forEach(rg -> rg.checkValue());
 		_ruleRegionMap.clear();
 		_areaRegionMap.clear();
 		for (RegionRect region : RegionList) {
-			System.out.println("登録 " + region);
 			if (region.haveRule())
 				region.register(_ruleRegionMap);
 			else
@@ -184,33 +187,40 @@ public class RegionManager {
 						.toArray(RegionRect[]::new)) {
 					state = state.returnIfNone(rg.checkPermission(permission, player));
 				}
-			return state == EnumPermissionState.ALLOW;
+			return state != EnumPermissionState.DENY;
 		}
 	}
 	// ====== ルール ======
 
 	public static Map<String, RegionRule> RuleMap = new HashMap<>();
 
+	// ====== 通知系 ======
+	public static List<Runnable> listenerList = new ArrayList<>();
+
+	public static void addListener(Runnable listener) {
+		listenerList.add(listener);
+	}
+
 	// ====== マネージャの格納系 ======
 	private static final Int2ObjectMap<RegionManager> regionManager = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
 
 	@SideOnly(Side.CLIENT)
 	public static RegionManager getManager() {
-		return getManager(Minecraft.getMinecraft().player.dimension);
+		return getManager(Minecraft.getMinecraft().player.dimension, Side.CLIENT);
 	}
 
-	public static RegionManager getManager(int dim) {
+	public static RegionManager getManager(int dim, Side side) {
 		// Mapにあったらそれを返す
 		RegionManager rm = regionManager.get(dim);
 		if (rm != null)
 			return rm;
 
-		System.out.println("MANAGER NOT FOUND " + dim);
 		// リモートならあきらめる
-		if (!Minecraft.getMinecraft().isIntegratedServerRunning()) {
-			rm = new RegionManager();
-			return rm;
+		if (side == Side.CLIENT) {
+			return new RegionManager();
 		}
+
+		HideFaction.log.info("load region manager Dim = " + dim);
 		rm = new RegionManager();
 		// 読み込みトライ
 		if (loadRegion(rm, DimensionManager.getWorld(dim)))
@@ -253,17 +263,19 @@ public class RegionManager {
 
 		Map<EnumRegionPermission, EnumPermissionState> defaultrule = readData(new File(world.getChunkSaveLocation(), defaultRule), new TypeToken<Map<EnumRegionPermission, EnumPermissionState>>() {
 		}.getType());
-		if (list != null)
+		if (defaultrule != null)
 			rm.DefaultPermission = defaultrule;
 		else
 			flag = true;
 
 		Map<String, RegionRule> rule = readData(new File(world.getSaveHandler().getWorldDirectory(), ruleMap), new TypeToken<Map<String, RegionRule>>() {
 		}.getType());
-		if (list != null)
+		if (rule != null)
 			RuleMap = rule;
 		else
 			flag = true;
+
+		rm.registerRegionMap();
 		return flag;
 	}
 
@@ -272,7 +284,7 @@ public class RegionManager {
 			return null;
 		}
 		try (FileReader fileReader = new FileReader(file)) {
-			T res = gson.fromJson(fileReader, type);
+			return gson.fromJson(fileReader, type);
 		} catch (Exception exception1) {
 			exception1.printStackTrace();
 			// 読み込み失敗時に名称変更
