@@ -1,7 +1,6 @@
 package hide.region.network;
 
 import java.util.EnumMap;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import hide.core.HideFaction;
@@ -43,9 +42,9 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 		this.mode = mode;
 	}
 
-	private Map<EnumRegionPermission, EnumPermissionState> defaultRule;
+	private EnumMap<EnumRegionPermission, EnumPermissionState> defaultRule;
 
-	public static PacketRegionEdit editDefaultRule(Map<EnumRegionPermission, EnumPermissionState> value) {
+	public static PacketRegionEdit editDefaultRule(EnumMap<EnumRegionPermission, EnumPermissionState> value) {
 		PacketRegionEdit packet = new PacketRegionEdit((byte) (EDIT | DEFAULT_RULE));
 		packet.defaultRule = value;
 		return packet;

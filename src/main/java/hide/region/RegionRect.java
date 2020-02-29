@@ -58,6 +58,14 @@ public class RegionRect implements IMessage {
 		return this;
 	}
 
+	public Vec3i getStartPos() {
+		return _start;
+	}
+
+	public Vec3i getEndPos() {
+		return _end;
+	}
+
 	public RegionRect setTag(String... name) {
 		_tag = name;
 		return this;
@@ -133,9 +141,7 @@ public class RegionRect implements IMessage {
 		return _rule == null ? EnumPermissionState.NONE : _rule.checkPermission(regionPermission, player);
 	}
 
-	@SideOnly(Side.CLIENT)
 	private AxisAlignedBB collision;
-	@SideOnly(Side.CLIENT)
 
 	private static List<String> drawArray = new ArrayList<>();
 
@@ -153,13 +159,13 @@ public class RegionRect implements IMessage {
 		double vY = _end.getY() - _start.getY();
 		double vZ = _end.getZ() - _start.getZ();
 
+		GlStateManager.pushMatrix();
+
 		// startを原点とする座標に
 		GlStateManager.translate(-pX, -pY, -pZ);
 
 		// プレイヤーの視点位置に
 		pY += mc.player.eyeHeight;
-
-		GlStateManager.pushMatrix();
 
 		GlStateManager.disableDepth();
 

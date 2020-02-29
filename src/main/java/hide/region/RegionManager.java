@@ -44,7 +44,7 @@ public class RegionManager {
 	private RuleChunkRegingMap _ruleRegionMap = new RuleChunkRegingMap();
 	private ChunkRegingMap _areaRegionMap = new ChunkRegingMap();
 
-	public Map<EnumRegionPermission, EnumPermissionState> DefaultPermission = new EnumMap(EnumRegionPermission.class);
+	public EnumMap<EnumRegionPermission, EnumPermissionState> DefaultPermission = new EnumMap(EnumRegionPermission.class);
 
 	public RegionManager() {// TODO テストコード
 
@@ -264,7 +264,7 @@ public class RegionManager {
 		Map<EnumRegionPermission, EnumPermissionState> defaultrule = readData(new File(world.getChunkSaveLocation(), defaultRule), new TypeToken<Map<EnumRegionPermission, EnumPermissionState>>() {
 		}.getType());
 		if (defaultrule != null)
-			rm.DefaultPermission = defaultrule;
+			rm.DefaultPermission = new EnumMap<>(defaultrule);
 		else
 			flag = true;
 

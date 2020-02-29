@@ -36,7 +36,7 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 		this.mode = mode;
 	}
 
-	private Map<EnumRegionPermission, EnumPermissionState> defaultMap;
+	private EnumMap<EnumRegionPermission, EnumPermissionState> defaultMap;
 
 	public static PacketRegionData defaultRule(RegionManager manager) {
 		PacketRegionData data = new PacketRegionData(DEFAULT_RULE);

@@ -3,9 +3,7 @@ package hide.core.network;
 import org.apache.commons.lang3.ArrayUtils;
 
 import hide.region.PermissionManager;
-import hide.region.gui.RegionEditGUI;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -50,7 +48,7 @@ public class PacketSimpleCmd implements IMessage, IMessageHandler<PacketSimpleCm
 
 	@SideOnly(Side.CLIENT)
 	private void openRegionGUI() {
-		Minecraft.getMinecraft().displayGuiScreen(new RegionEditGUI());
+
 	}
 
 }

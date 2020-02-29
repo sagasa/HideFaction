@@ -76,6 +76,6 @@ public class RegionEditor {
 		RegionManager rm = RegionManager.getManager();
 		//選択したレギオンを見ているなら
 		if (rm.RegionList.get(index).isHit(start, end))
-			Minecraft.getMinecraft().displayGuiScreen(new RegionEditGUI(rm.RegionList.get(index)));
+			Minecraft.getMinecraft().displayGuiScreen(new RegionEditGUI((byte) index));
 	}
 }
