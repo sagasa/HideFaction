@@ -13,7 +13,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class PacketSimpleCmd implements IMessage, IMessageHandler<PacketSimpleCmd, IMessage> {
 
 	public enum Cmd {
-		S, OpenRegionGUI,RegionDataReq;
+		RegisterRegion, OpenRegionGUI,RegionDataReq;
 	}
 
 	public PacketSimpleCmd() {

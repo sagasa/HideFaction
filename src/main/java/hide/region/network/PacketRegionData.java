@@ -14,6 +14,7 @@ import hide.region.RegionManager;
 import hide.region.RegionRect;
 import hide.region.RegionRule;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -26,9 +27,9 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 	public PacketRegionData() {
 	}
 
-	private static final byte DEFAULT_RULE = 0;
-	private static final byte REGION_LIST = 1;
-	private static final byte RULE_MAP = 2;
+	private static final byte DEFAULT_RULE = 1;
+	private static final byte REGION_LIST = 2;
+	private static final byte RULE_MAP = 3;
 
 	private byte mode;
 
@@ -90,7 +91,8 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 			byte size = buf.readByte();
 			defaultMap = new EnumMap<>(EnumRegionPermission.class);
 			for (int i = 0; i < size; i++) {
-				defaultMap.put(EnumRegionPermission.values()[buf.readByte()], EnumPermissionState.values()[buf.readByte()]);
+				defaultMap.put(EnumRegionPermission.values()[buf.readByte()],
+						EnumPermissionState.values()[buf.readByte()]);
 			}
 		} else if (mode == REGION_LIST) {
 			byte size = buf.readByte();
@@ -114,33 +116,34 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 
 	@Override
 	public IMessage onMessage(PacketRegionData msg, MessageContext ctx) {
-		//受信したデータで上書き
+		// 受信したデータで上書き
 		if (ctx.side == Side.CLIENT) {
 			onMsg(msg);
-		} //TODO サーバー側で受信時に全員に配信
+		} // TODO サーバー側で受信時に全員に配信
 		return null;
 	}
 
 	@SideOnly(Side.CLIENT)
 	private void onMsg(PacketRegionData msg) {
-		switch (msg.mode) {
-		case REGION_LIST:
-			RegionManager.getManager().RegionList = msg.regionList;
-			RegionManager.getManager().registerRegionMap();
-			HideFaction.log.info("receive RegionList from server");
-			break;
-		case DEFAULT_RULE:
-			RegionManager.getManager().DefaultPermission = msg.defaultMap;
-			RegionManager.getManager().registerRegionMap();
-			HideFaction.log.info("receive DefaultRule from server");
-			break;
-		case RULE_MAP:
-			RegionManager.RuleMap = msg.ruleMap;
-			RegionManager.getManager().registerRegionMap();
-			HideFaction.log.info("receive RuleMap from server");
-			break;
-		default:
-			break;
-		}
+		if (!Minecraft.getMinecraft().isIntegratedServerRunning())
+			switch (msg.mode) {
+			case REGION_LIST:
+				RegionManager.getManager().RegionList = msg.regionList;
+				RegionManager.getManager().registerRegionMap();
+				HideFaction.log.info("receive RegionList from server");
+				break;
+			case DEFAULT_RULE:
+				RegionManager.getManager().DefaultPermission = msg.defaultMap;
+				RegionManager.getManager().registerRegionMap();
+				HideFaction.log.info("receive DefaultRule from server");
+				break;
+			case RULE_MAP:
+				RegionManager.RuleMap = msg.ruleMap;
+				RegionManager.getManager().registerRegionMap();
+				HideFaction.log.info("receive RuleMap from server");
+				break;
+			default:
+				break;
+			}
 	}
 }

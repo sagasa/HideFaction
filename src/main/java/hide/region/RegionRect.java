@@ -196,16 +196,20 @@ public class RegionRect implements IMessage {
 			// 中央に描画するリスト
 			drawArray.clear();
 			for (String str : _tag) {
-				drawArray.add(str);
+				drawArray.add("tag : "+str);
 			}
 			drawArray.add("RuleName : " + _ruleName);
-			drawArray.add("Priority : " + _rule.priority);
-			if (Strings.isNotBlank(_rule.targetName)) {
-				drawArray.add("Target : " + _rule.targetName);
-				drawArray.add("Rank : " + _rule.targetRank);
-			}
-			for (Entry<EnumRegionPermission, EnumPermissionState> entry : _rule.getMap().entrySet()) {
-				drawArray.add(entry.getKey() + " : " + entry.getValue());
+			if(haveRule()) {
+				drawArray.add("Priority : " + _rule.priority);
+				if (Strings.isNotBlank(_rule.targetName)) {
+					drawArray.add("Target : " + _rule.targetName);
+					drawArray.add("Rank : " + _rule.targetRank);
+				}
+				for (Entry<EnumRegionPermission, EnumPermissionState> entry : _rule.getMap().entrySet()) {
+					drawArray.add(entry.getKey() + " : " + entry.getValue());
+				}
+			}else {
+				drawArray.add("Not Set");
 			}
 
 			double x = vX / 2;

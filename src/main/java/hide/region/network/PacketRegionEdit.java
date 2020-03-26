@@ -13,6 +13,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -22,6 +23,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 /** 変更配信パケット クライアントから受信した場合他のプレイヤーに配信 */
 public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionEdit, IMessage> {
+
+	private static final byte REGISTER = -0x7F;
 
 	private static final byte MASK_OPERATOR = 0xF;
 	private static final byte ADD = 0x0;
@@ -38,8 +41,12 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 
 	private byte mode;
 
-	public PacketRegionEdit(byte mode) {
+	private PacketRegionEdit(byte mode) {
 		this.mode = mode;
+	}
+
+	public static PacketRegionEdit register() {
+		return new PacketRegionEdit(REGISTER);
 	}
 
 	private EnumMap<EnumRegionPermission, EnumPermissionState> defaultRule;
@@ -92,6 +99,8 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 	@Override
 	public void toBytes(ByteBuf buf) {
 		buf.writeByte(mode);
+		if (mode == REGISTER)
+			return;
 		if ((mode & MASK_TARGET) == DEFAULT_RULE) {
 			buf.writeByte(defaultRule.size());
 			for (Entry<EnumRegionPermission, EnumPermissionState> entry : defaultRule.entrySet()) {
@@ -118,6 +127,8 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 	@Override
 	public void fromBytes(ByteBuf buf) {
 		mode = buf.readByte();
+		if (mode == REGISTER)
+			return;
 		if ((mode & MASK_TARGET) == DEFAULT_RULE) {
 			byte size = buf.readByte();
 			defaultRule = new EnumMap<>(EnumRegionPermission.class);
@@ -150,58 +161,54 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 		// サーバー側で受信したら全体に返信
 
 		if (ctx.side == Side.SERVER) {
-			EntityPlayer player = ctx.getServerHandler().player;
-			RegionManager rm = RegionManager.getManager(player.dimension, Side.SERVER);
-			player.getServer().addScheduledTask(() -> {
-				if ((mode & MASK_TARGET) == DEFAULT_RULE) {
-					rm.DefaultPermission = msg.defaultRule;
-				} else if ((mode & MASK_TARGET) == RULE_MAP) {
-					if ((mode & MASK_OPERATOR) == ADD)
-						rm.RuleMap.put(name, rule);
-					else if ((mode & MASK_OPERATOR) == REMOVE)
-						rm.RuleMap.remove(name);
-					rm.registerRegionMap();
-				} else if ((mode & MASK_TARGET) == REGION_LIST) {
-					if ((mode & MASK_OPERATOR) == EDIT)
-						rm.RegionList.set(index, region);
-					else if ((mode & MASK_OPERATOR) == ADD)
-						rm.RegionList.add(region);
-					else if ((mode & MASK_OPERATOR) == REMOVE)
-						rm.RegionList.remove(index);
-					rm.registerRegionMap();
-				}
-				// 受信元以外に配信
-				for (EntityPlayer p : player.world.playerEntities)
-					if (p != player)
-						HideFaction.NETWORK.sendTo(msg, (EntityPlayerMP) p);
-			});
+			msg.onMsgServer(ctx);
 		} else {
-			onMsg(msg);
+			msg.onMsgClient(ctx);
 		}
 		return null;
 	}
 
+	private void onMsgServer(MessageContext ctx) {
+		EntityPlayer player = ctx.getServerHandler().player;
+		RegionManager rm = RegionManager.getManager(player.dimension, Side.SERVER);
+		player.getServer().addScheduledTask(() -> {
+			apply(rm);
+
+			System.out.println("receve Edit form Client");
+			RegionManager.saveRegion(rm, (WorldServer) player.world);
+			// 受信元以外に配信
+			for (EntityPlayer p : player.world.playerEntities)
+				if (p != player)
+					HideFaction.NETWORK.sendTo(this, (EntityPlayerMP) p);
+		});
+	}
+
 	@SideOnly(Side.CLIENT)
-	private void onMsg(PacketRegionEdit msg) {
+	private void onMsgClient(MessageContext ctx) {
 		RegionManager rm = RegionManager.getManager();
 		Minecraft.getMinecraft().addScheduledTask(() -> {
-			if ((mode & MASK_TARGET) == DEFAULT_RULE) {
-				rm.DefaultPermission = msg.defaultRule;
-			} else if ((mode & MASK_TARGET) == RULE_MAP) {
-				if ((mode & MASK_OPERATOR) == ADD)
-					rm.RuleMap.put(name, rule);
-				else if ((mode & MASK_OPERATOR) == REMOVE)
-					rm.RuleMap.remove(name);
-				rm.registerRegionMap();
-			} else if ((mode & MASK_TARGET) == REGION_LIST) {
-				if ((mode & MASK_OPERATOR) == EDIT)
-					rm.RegionList.set(index, region);
-				else if ((mode & MASK_OPERATOR) == ADD)
-					rm.RegionList.add(region);
-				else if ((mode & MASK_OPERATOR) == REMOVE)
-					rm.RegionList.remove(index);
-				rm.registerRegionMap();
-			}
+			apply(rm);
 		});
+		System.out.println("receve Edit form Server");
+	}
+
+	private void apply(RegionManager rm) {
+		if (mode == REGISTER)
+			rm.registerRegionMap();
+		else if ((mode & MASK_TARGET) == DEFAULT_RULE) {
+			rm.DefaultPermission = defaultRule;
+		} else if ((mode & MASK_TARGET) == RULE_MAP) {
+			if ((mode & MASK_OPERATOR) == ADD)
+				rm.RuleMap.put(name, rule);
+			else if ((mode & MASK_OPERATOR) == REMOVE)
+				rm.RuleMap.remove(name);
+		} else if ((mode & MASK_TARGET) == REGION_LIST) {
+			if ((mode & MASK_OPERATOR) == EDIT)
+				rm.RegionList.set(index, region);
+			else if ((mode & MASK_OPERATOR) == ADD)
+				rm.RegionList.add(region);
+			else if ((mode & MASK_OPERATOR) == REMOVE)
+				rm.RegionList.remove(index);
+		}
 	}
 }

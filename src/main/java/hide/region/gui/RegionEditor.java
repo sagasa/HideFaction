@@ -12,11 +12,19 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class RegionEditor {
 
 	static {
-		RegionManager.addListener(RegionEditor::clear);
+		RegionManager.addListener(RegionEditor::checkIndex);
 	}
 
-	public static void clear() {
-		index = -1;
+	public static void checkIndex() {
+		if (RegionManager.getManager().RegionList.size() < index + 1)
+			index = -1;
+		Minecraft mc = Minecraft.getMinecraft();
+		if (mc.currentScreen != null && mc.currentScreen instanceof RegionEditGUI) {
+			if (index == -1)
+				mc.displayGuiScreen(null);
+			else
+				mc.displayGuiScreen(new RegionEditGUI((byte) index));
+		}
 	}
 
 	public static boolean EditMode = true;
@@ -26,16 +34,15 @@ public class RegionEditor {
 	public static void draw(float partialTicks) {
 		RegionManager rm = RegionManager.getManager();
 		for (int i = 0; i < rm.RegionList.size(); i++) {
-			//選択中なら
+			// 選択中なら
 			if (i == index)
 				rm.RegionList.get(i).drawRegionRect(true, partialTicks, 0.8f, 1f, 0);
 			else
-				rm.RegionList.get(i).drawRegionRect(true, partialTicks, 0.5f, 1f, 0.5f);
-
+				rm.RegionList.get(i).drawRegionRect(false, partialTicks, 0.5f, 1f, 0.5f);
 		}
 	}
 
-	/**indexの値を変更する*/
+	/** indexの値を変更する */
 	public static void select() {
 		if (!EditMode)
 			return;
@@ -45,22 +52,22 @@ public class RegionEditor {
 		Vec3d start = player.getPositionVector().addVector(0, player.eyeHeight, 0);
 		Vec3d end = start.add(player.getLook(1.0F).scale(40));
 		RegionManager rm = RegionManager.getManager();
-		//最初に当たったレギオン
+		// 最初に当たったレギオン
 		int minHit = -1;
 		for (int i = 0; i < rm.RegionList.size(); i++) {
 			RegionRect rg = rm.RegionList.get(i);
 			if (rg.isHit(start, end) && index != i) {
-				//現在の選択よりも前にあったら
+				// 現在の選択よりも前にあったら
 				if (minHit == -1 && i < index)
 					minHit = i;
-				//現在の選択よりも後にあったら処理を終了
+				// 現在の選択よりも後にあったら処理を終了
 				if (index < i) {
 					index = i;
 					return;
 				}
 			}
 		}
-		//現在の選択が最後なら
+		// 現在の選択が最後なら
 		index = minHit;
 	}
 
@@ -74,7 +81,7 @@ public class RegionEditor {
 		Vec3d start = player.getPositionVector().addVector(0, player.eyeHeight, 0);
 		Vec3d end = start.add(player.getLook(1.0F).scale(40));
 		RegionManager rm = RegionManager.getManager();
-		//選択したレギオンを見ているなら
+		// 選択したレギオンを見ているなら
 		if (rm.RegionList.get(index).isHit(start, end))
 			Minecraft.getMinecraft().displayGuiScreen(new RegionEditGUI((byte) index));
 	}

@@ -10,6 +10,7 @@ import hide.region.RegionCommand;
 import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
 import hide.region.network.PacketRegionEdit;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -60,6 +61,10 @@ public class HideFaction {
 
 		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 4, Side.SERVER);
 		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 5, Side.CLIENT);
+
+		if(event.getSide()==Side.CLIENT) {
+			Minecraft.getMinecraft().getFramebuffer().enableStencil();
+		}
 	}
 
 	@EventHandler

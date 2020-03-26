@@ -46,8 +46,11 @@ public class RegionManager {
 
 	public EnumMap<EnumRegionPermission, EnumPermissionState> DefaultPermission = new EnumMap(EnumRegionPermission.class);
 
-	public RegionManager() {// TODO テストコード
+	public RegionManager() {
 
+	}
+
+	public void setTestData() {
 		RegionRule rule = new RegionRule();
 		rule.getMap().put(EnumRegionPermission.BlockDestroy, EnumPermissionState.DENY);
 		RuleMap.put("test", rule);
@@ -64,7 +67,6 @@ public class RegionManager {
 		registerRegionMap();
 
 		for (EnumRegionPermission p : EnumRegionPermission.values()) {
-
 			DefaultPermission.put(p, EnumPermissionState.NONE);
 		}
 	}
@@ -215,18 +217,19 @@ public class RegionManager {
 		if (rm != null)
 			return rm;
 
-		// リモートならあきらめる
+		rm = new RegionManager();
+		regionManager.put(dim, rm);
+		// リモートなら読み込まない
 		if (side == Side.CLIENT) {
-			return new RegionManager();
+			return rm;
 		}
 
 		HideFaction.log.info("load region manager Dim = " + dim);
-		rm = new RegionManager();
 		// 読み込みトライ
 		if (loadRegion(rm, DimensionManager.getWorld(dim)))
 			// 欠損があればセーブ
 			saveRegion(rm, DimensionManager.getWorld(dim));
-		regionManager.put(dim, rm);
+
 		return rm;
 	}
 
