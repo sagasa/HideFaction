@@ -94,7 +94,7 @@ public class RegionManager {
 			return true;
 		// player.world.getScoreboard().getTeam(player.getName()).getName();
 		boolean state = _ruleRegionMap.permission(pos, player, permission);
-		// System.out.println(RegionList + " " + _ruleRegionMap.getRegion(pos, null));
+		System.out.println(state + " " + RegionList + " " + _ruleRegionMap.getRegionOr(pos));
 		return state;
 	}
 
@@ -205,6 +205,10 @@ public class RegionManager {
 
 	// ====== マネージャの格納系 ======
 	private static final Int2ObjectMap<RegionManager> regionManager = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
+
+	public static void clearManager() {
+		regionManager.clear();
+	}
 
 	@SideOnly(Side.CLIENT)
 	public static RegionManager getManager() {

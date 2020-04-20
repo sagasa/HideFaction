@@ -1,5 +1,7 @@
 package hide.region;
 
+import org.lwjgl.input.Mouse;
+
 import hide.core.HideFaction;
 import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
@@ -10,7 +12,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
@@ -19,6 +20,8 @@ import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerChangedDimensionEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.relauncher.Side;
 
 /**パーミッション系の同期等*/
@@ -49,12 +52,14 @@ public class PermissionManager {
 
 	//========= GUI ===========
 	@SubscribeEvent()
-	public void guiEdit(MouseEvent event) {
-		if (event.isButtonstate()) {
-			if (event.getButton() == 0)
+	public void guiEdit(ClientTickEvent event) {
+		if (event.phase == Phase.END) {
+
+			if (Mouse.isButtonDown(0))
 				RegionEditor.select();
-			if (event.getButton() == 1)
+			if (Mouse.isButtonDown(1))
 				RegionEditor.edit();
+
 		}
 	}
 	//========= キャンセル系 ===========

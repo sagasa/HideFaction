@@ -16,6 +16,8 @@ public class RegionEditor {
 	}
 
 	public static void checkIndex() {
+		if (Minecraft.getMinecraft().player == null)
+			return;
 		if (RegionManager.getManager().RegionList.size() < index + 1)
 			index = -1;
 		Minecraft mc = Minecraft.getMinecraft();

@@ -104,6 +104,7 @@ public class HideFaction {
 		}
 	}
 
+
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent()
 	public void onEvent(RenderWorldLastEvent event) {
