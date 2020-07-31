@@ -19,6 +19,9 @@ sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse t
 compileJava {
     sourceCompatibility = targetCompatibility = '1.8'
 }
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
 
 minecraft {
     version = "1.12.2-14.23.4.2750"
@@ -33,11 +36,18 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
+configurations {
+    shade
+    compile.extendsFrom shade
+}
+
+
 dependencies {
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
     //compile "some.group:artifact:version:classifier"
     //compile "some.group:artifact:version"
+    compile fileTree(dir: 'libs', include: '*.jar')
       
     // real examples
     //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
@@ -54,7 +64,19 @@ dependencies {
     // for more info...
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    shade 'org.xerial:sqlite-jdbc:3.32.3'
+}
 
+jar {
+    configurations.shade.each { dep ->
+        from(project.zipTree(dep)){
+            exclude 'META-INF', 'META-INF/**'
+            // you may exclude other things here if you want, or maybe copy the META-INF
+        }
+    }
+    manifest {
+        attributes 'FMLAT': 'hidefaction_at.cfg'
+    }
 }
 
 processResources {

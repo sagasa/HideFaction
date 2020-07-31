@@ -2,7 +2,15 @@ package hide.core;
 
 import org.apache.logging.log4j.Logger;
 
+import hide.chat.CommandChat;
+import hide.chat.HideChatManager;
+import hide.chat.HideChatManager.ServerChatData;
+import hide.chat.PacketChat;
+import hide.chat.PacketChatState;
+import hide.core.asm.HideCoreHook;
 import hide.core.gui.FactionGUIHandler;
+import hide.core.gui.GuiHideChat;
+import hide.core.gui.GuiHideNewChat;
 import hide.core.network.PacketSimpleCmd;
 import hide.faction.command.Faction;
 import hide.region.PermissionManager;
@@ -11,12 +19,16 @@ import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
 import hide.region.network.PacketRegionEdit;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -24,7 +36,9 @@ import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
@@ -62,8 +76,17 @@ public class HideFaction {
 		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 4, Side.SERVER);
 		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 5, Side.CLIENT);
 
-		if(event.getSide()==Side.CLIENT) {
+		NETWORK.registerMessage(PacketChat.class, PacketChat.class, 6, Side.SERVER);
+		NETWORK.registerMessage(PacketChat.class, PacketChat.class, 7, Side.CLIENT);
+
+		NETWORK.registerMessage(PacketChatState.class, PacketChatState.class, 8, Side.SERVER);
+		NETWORK.registerMessage(PacketChatState.class, PacketChatState.class, 9, Side.CLIENT);
+
+		HidePlayerDataManager.register(ServerChatData.class, Side.SERVER);
+		if (event.getSide() == Side.CLIENT) {
 			Minecraft.getMinecraft().getFramebuffer().enableStencil();
+			HideCoreHook.GuiNewChat = GuiHideNewChat::new;
+
 		}
 	}
 
@@ -76,16 +99,33 @@ public class HideFaction {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new FactionGUIHandler());
+
 		// some example code
 		log.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
+
 	}
 
 	@EventHandler
-	public void start(FMLServerStartingEvent event) {
-
+	public void serverStart(FMLServerStartingEvent event) {
+		HideFactionDB.start();
 		event.registerServerCommand(new Faction());
-
 		event.registerServerCommand(new RegionCommand());
+		event.registerServerCommand(new CommandChat());
+	}
+
+	@EventHandler
+	public void serverStop(FMLServerStoppedEvent event) {
+		HideFactionDB.end();
+	}
+
+	@SubscribeEvent()
+	public void onEvent(ServerChatEvent event) {
+		HideChatManager.onChat(event);
+	}
+
+	@SubscribeEvent()
+	public void onEvent(PlayerLoggedInEvent event) {
+		HideChatManager.onLogin((EntityPlayerMP) event.player);
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -98,12 +138,20 @@ public class HideFaction {
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent()
+	public void onEvent(GuiOpenEvent event) {
+		//System.out.println(event.getGui());
+		if (event.getGui() instanceof GuiChat) {
+			event.setGui(new GuiHideChat());
+		}
+	}
+
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent()
 	public void onEvent(RenderGameOverlayEvent event) {
 		if (event.isCancelable() && event.getType() == ElementType.PLAYER_LIST) {
 
 		}
 	}
-
 
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent()

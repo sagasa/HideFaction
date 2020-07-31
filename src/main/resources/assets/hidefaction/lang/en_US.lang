@@ -1,0 +1,2 @@
+commands.chat.usage=/chat <reload|test> [player]
+commands.chat.reload.success=reload %s's chat

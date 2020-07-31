@@ -169,7 +169,7 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 	}
 
 	private void onMsgServer(MessageContext ctx) {
-		EntityPlayer player = ctx.getServerHandler().player;
+		EntityPlayerMP player = ctx.getServerHandler().player;
 		RegionManager rm = RegionManager.getManager(player.dimension, Side.SERVER);
 		player.getServer().addScheduledTask(() -> {
 			apply(rm);
