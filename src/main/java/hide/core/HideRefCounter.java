@@ -32,7 +32,7 @@ public class HideRefCounter<T> {
 		if (maxRefCount < refList.size()) {
 			T old = refList.get(maxRefCount);
 			refList.remove(maxRefCount);
-			if (refFilter == null || refFilter.apply(scope))
+			if (refFilter == null || refFilter.apply(old))
 				removeFunc.accept(old);
 			//System.out.println("ref remove " + old + " from " + refList);
 

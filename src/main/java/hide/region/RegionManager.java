@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -37,7 +38,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 public class RegionManager {
 
 	/** セッション毎の保護無視プレイヤーリスト サーバーサイドでのみ機能 */
-	public static final Set<EntityPlayer> OPPlayers = new HashSet<>();
+	public static final Set<UUID> OPPlayers = new HashSet<>();
 
 	public List<RegionRect> RegionList = new ArrayList<>();
 
@@ -90,11 +91,13 @@ public class RegionManager {
 
 	/** レギオンを検索して許可されるか返す */
 	public boolean permission(BlockPos pos, EntityPlayer player, EnumRegionPermission permission) {
-		if (permission.ArrowFromOP && OPPlayers.contains(player))
+		if (permission.ArrowFromOP && OPPlayers.contains(player.getUniqueID())) {
+			System.out.println("op skip " + OPPlayers + " " + permission);
 			return true;
+		}
 		// player.world.getScoreboard().getTeam(player.getName()).getName();
 		boolean state = _ruleRegionMap.permission(pos, player, permission);
-		System.out.println(state + " " + RegionList + " " + _ruleRegionMap.getRegionOr(pos));
+		//System.out.println(state + " " + RegionList + " " + _ruleRegionMap.getRegionOr(pos));
 		return state;
 	}
 
@@ -271,7 +274,10 @@ public class RegionManager {
 		Map<EnumRegionPermission, EnumPermissionState> defaultrule = readData(new File(world.getChunkSaveLocation(), defaultRule), new TypeToken<Map<EnumRegionPermission, EnumPermissionState>>() {
 		}.getType());
 		if (defaultrule != null)
-			rm.DefaultPermission = new EnumMap<>(defaultrule);
+			if (defaultrule.size() != 0)
+				rm.DefaultPermission = new EnumMap<>(defaultrule);
+			else
+				rm.DefaultPermission = new EnumMap<>(EnumRegionPermission.class);
 		else
 			flag = true;
 

@@ -1,2 +1,6 @@
 commands.chat.usage=/chat <reload|test> [player]
 commands.chat.reload.success=reload %s's chat
+
+commands.faction.usage=/faction <gui|op|deop> [player]
+commands.faction.op.success=op %s
+commands.faction.deop.success=deop %s

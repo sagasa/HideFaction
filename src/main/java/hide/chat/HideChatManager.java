@@ -90,11 +90,10 @@ public class HideChatManager {
 		//*
 		ImmutablePair<ChatChannel, String> channel = HidePlayerDataManager.getServerData(ServerChatData.class, event.getPlayer()).sendChannel;
 
-		System.out.println(" " + event.getMessage()+" "+channel);
+		System.out.println(" " + event.getMessage() + " " + channel);
 		HideChatLine line = HideFactionDB.logChat(event.getPlayer().getUniqueID().toString(), channel.left, channel.right, channel.left.getChannelName().appendSibling(event.getComponent()));
 		HideFaction.NETWORK.sendToAll(PacketChat.newChat(line));
 		//*/
-
 		/*
 		for (int i = 0; i < 100; i++) {
 			HideChatLine line = HideFactionDB.logChat(event.getPlayer().getUniqueID().toString(), ChatChannel.Global, "", event.getComponent().createCopy().appendText(i + ""));
@@ -118,13 +117,17 @@ public class HideChatManager {
 	}
 
 	public static String getFaction(EntityPlayer player) {
+		if (player == null || player.world == null)
+			return "";
 		ScorePlayerTeam team = player.world.getScoreboard().getPlayersTeam(player.getName());
-		return team == null ? null : team.getName();
+		return team == null ? "" : team.getName();
 	}
 
 	@SideOnly(Side.CLIENT)
 	public static String getFaction() {
 		EntityPlayer player = Minecraft.getMinecraft().player;
+		if (player == null || player.world == null)
+			return "";
 		ScorePlayerTeam team = player.world.getScoreboard().getPlayersTeam(player.getName());
 		return team == null ? "" : team.getName();
 	}

@@ -21,30 +21,34 @@ import hide.chat.HideChatManager;
 import hide.chat.HideChatManager.ChatChannel;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.fml.common.Loader;
 
 public class HideFactionDB {
 
 	private static Connection conn;
 
 	public static void start() {
-		File file = new File("./FactionDB");
+		File file = new File(Loader.instance().getConfigDir().getParentFile(), "/FactionDB/");
+		System.out.println("File " + file);
 		file.mkdirs();
 		final String URL = "jdbc:sqlite:FactionDB/faction.db";
 		//	        final String USER = "";
 		//	        final String PASS = "";
-		final String SQL = "select * from syain where id =? ;";
 
 		try {
+			Class.forName("org.sqlite.JDBC");
 			conn = DriverManager.getConnection(URL);
 			Statement stmt = conn.createStatement();
 			stmt.execute("create table if not exists chat(Time datetime, Sender string, ChannelType string, ChannelName string, Msg string)");
 
-		} catch (SQLException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public static void end() {
+		if (conn == null)
+			return;
 		try {
 			conn.close();
 		} catch (SQLException e) {
@@ -56,7 +60,7 @@ public class HideFactionDB {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select rowid, * from chat where ");
 		if (from != -1) {
-			sb.append("rowid < ");
+			sb.append("rowid <= ");
 			sb.append(from);
 			sb.append(" and ");
 		}
@@ -82,7 +86,7 @@ public class HideFactionDB {
 		StringBuilder sb = new StringBuilder();
 		sb.append("select rowid, * from chat where ");
 		if (from != -1) {
-			sb.append("rowid > ");
+			sb.append("rowid >= ");
 			sb.append(from);
 			sb.append(" and ");
 		}

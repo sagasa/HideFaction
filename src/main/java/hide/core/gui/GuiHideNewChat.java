@@ -71,7 +71,6 @@ public class GuiHideNewChat extends GuiNewChat {
 				return new ImmutablePair<>(pair.getLeft(), HideChatManager.getFaction());
 			return pair;
 		}).iterator());
-
 	}
 
 	/**チャットは届かないはずなのでシステムメッセージのみ*/
@@ -231,6 +230,10 @@ public class GuiHideNewChat extends GuiNewChat {
 
 	@Override
 	public void scroll(int amount) {
+		if (amount < 0)
+			amount = -5;
+		if (0 < amount)
+			amount = 5;
 		getChannelHolder().scroll(amount);
 	}
 

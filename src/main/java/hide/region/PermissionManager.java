@@ -103,11 +103,11 @@ public class PermissionManager {
 			Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
 			RegionManager rm = RegionManager.getManager(event.getEntityPlayer().dimension, event.getSide());
 			// チェスト
-			if (block instanceof BlockChest && rm.permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.ChestInteract)) {
+			if (block instanceof BlockChest && !rm.permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.ChestInteract)) {
 				event.setCanceled(true);
 			}
 			// チェスト
-			if (block instanceof BlockEnderChest && rm.permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.EnderChestInteract)) {
+			if (block instanceof BlockEnderChest && !rm.permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.EnderChestInteract)) {
 				event.setCanceled(true);
 			}
 		}

@@ -29,11 +29,13 @@ public class RegionEditor {
 		}
 	}
 
-	public static boolean EditMode = true;
+	public static boolean EditMode = false;//TODO
 
 	private static int index = -1;
 
 	public static void draw(float partialTicks) {
+		if (!EditMode)
+			return;
 		RegionManager rm = RegionManager.getManager();
 		for (int i = 0; i < rm.RegionList.size(); i++) {
 			// 選択中なら

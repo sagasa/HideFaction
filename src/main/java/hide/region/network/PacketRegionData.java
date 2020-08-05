@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import hide.core.HideFaction;
 import hide.region.EnumPermissionState;
@@ -30,6 +31,8 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 	private static final byte DEFAULT_RULE = 1;
 	private static final byte REGION_LIST = 2;
 	private static final byte RULE_MAP = 3;
+	private static final byte OP_ADD = 4;
+	private static final byte OP_REMOVE = 5;
 
 	private byte mode;
 
@@ -61,6 +64,20 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 		return data;
 	}
 
+	private UUID uuid;
+
+	public static PacketRegionData addOP(UUID player) {
+		PacketRegionData data = new PacketRegionData(OP_ADD);
+		data.uuid = player;
+		return data;
+	}
+
+	public static PacketRegionData removeOP(UUID player) {
+		PacketRegionData data = new PacketRegionData(OP_REMOVE);
+		data.uuid = player;
+		return data;
+	}
+
 	@Override
 	public void toBytes(ByteBuf buf) {
 		buf.writeByte(mode);
@@ -81,6 +98,9 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 				ByteBufUtils.writeUTF8String(buf, entry.getKey());
 				entry.getValue().toBytes(buf);
 			}
+		}else if (mode == OP_ADD||mode == OP_REMOVE) {
+			buf.writeLong(uuid.getMostSignificantBits());
+			buf.writeLong(uuid.getLeastSignificantBits());
 		}
 	}
 
@@ -111,6 +131,8 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 				rule.fromBytes(buf);
 				ruleMap.put(name, rule);
 			}
+		}else if (mode == OP_ADD||mode == OP_REMOVE) {
+			uuid = new UUID(buf.readLong(), buf.readLong());
 		}
 	}
 
@@ -141,6 +163,12 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 				RegionManager.RuleMap = msg.ruleMap;
 				RegionManager.getManager().registerRegionMap();
 				HideFaction.log.info("receive RuleMap from server");
+				break;
+			case OP_ADD:
+				RegionManager.OPPlayers.add(msg.uuid);
+				break;
+			case OP_REMOVE:
+				RegionManager.OPPlayers.remove(msg.uuid);
 				break;
 			default:
 				break;
