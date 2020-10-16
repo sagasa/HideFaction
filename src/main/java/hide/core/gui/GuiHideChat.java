@@ -17,6 +17,10 @@ public class GuiHideChat extends GuiChat {
 
 	private GuiHideNewChat newChat;
 
+	public GuiHideChat(String str) {
+		defaultInputFieldText = str;
+	}
+
 	public void initGui() {
 		buttonList.add(new GuiButton(10, 0, this.height - 75, 30, 20, "Global"));
 		buttonList.add(new GuiButton(11, 0, this.height - 55, 30, 20, "Team"));

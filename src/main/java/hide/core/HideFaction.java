@@ -147,7 +147,7 @@ public class HideFaction {
 	public void onEvent(GuiOpenEvent event) {
 		//System.out.println(event.getGui());
 		if (event.getGui() instanceof GuiChat) {
-			event.setGui(new GuiHideChat());
+			event.setGui(new GuiHideChat(((GuiChat)event.getGui()).defaultInputFieldText));
 		}
 	}
 
