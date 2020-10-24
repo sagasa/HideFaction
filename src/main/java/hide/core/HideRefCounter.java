@@ -12,6 +12,7 @@ public class HideRefCounter<T> {
 	/**指定数の値を保持 古いものから削除*/
 	public HideRefCounter(Consumer<T> removeFunc, int size) {
 		this.removeFunc = removeFunc;
+		this.maxRefCount = size;
 	}
 
 	public HideRefCounter<T> setFilter(Function<T, Boolean> filter) {

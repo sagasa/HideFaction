@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import hide.core.HideFaction;
 import hide.core.HideFactionDB;
@@ -102,6 +104,8 @@ public class HideChatManager {
 		//*/
 		event.setCanceled(true);
 	}
+
+	public static final Logger log = LogManager.getLogger();
 
 	/**読み込みの1単位*/
 	public static final int CHUNK_SIZE = 80;

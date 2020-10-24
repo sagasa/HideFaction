@@ -14,7 +14,7 @@ import hide.chat.HideChatLine;
 import hide.chat.HideChatManager;
 import hide.chat.HideChatManager.ChatChannel;
 import hide.core.HideRefCounter;
-import hide.core.gui.ChatScopeHolder.ChatScope;
+import hide.core.gui.ChatScopeHolder.ChatChunk;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.renderer.GlStateManager;
@@ -48,7 +48,7 @@ public class GuiHideNewChat extends GuiNewChat {
 
 	protected ChatScopeHolder getChannelHolder() {
 		if (!scopeMap.containsKey(channelView)) {
-			scopeMap.put(channelView, new ChatScopeHolder((ImmutableSet<ImmutablePair<ChatChannel, String>>) channelView));
+			scopeMap.put(channelView, new ChatScopeHolder((ImmutableSet<ImmutablePair<ChatChannel, String>>) channelView, this));
 		}
 		return scopeMap.get(channelView);
 	}
@@ -97,7 +97,7 @@ public class GuiHideNewChat extends GuiNewChat {
 	public void drawChat(int updateCounter) {
 		if (this.mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
 			ChatScopeHolder holder = getChannelHolder();
-			ChatScope scope = holder.getCurrent();
+			ChatChunk scope = holder.getCurrent();
 
 			if (scope == null)
 				return;
