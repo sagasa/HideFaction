@@ -89,16 +89,17 @@ public class HideChatManager {
 	}
 
 	public static void onChat(ServerChatEvent event) {
-		//*
+
 		ImmutablePair<ChatChannel, String> channel = HidePlayerDataManager.getServerData(ServerChatData.class, event.getPlayer()).sendChannel;
 
-		System.out.println(" " + event.getMessage() + " " + channel);
+		//*
+		//System.out.println(" " + event.getMessage() + " " + channel);
 		HideChatLine line = HideFactionDB.logChat(event.getPlayer().getUniqueID().toString(), channel.left, channel.right, channel.left.getChannelName().appendSibling(event.getComponent()));
 		HideFaction.NETWORK.sendToAll(PacketChat.newChat(line));
 		//*/
 		/*
 		for (int i = 0; i < 100; i++) {
-			HideChatLine line = HideFactionDB.logChat(event.getPlayer().getUniqueID().toString(), ChatChannel.Global, "", event.getComponent().createCopy().appendText(i + ""));
+			HideChatLine line = HideFactionDB.logChat(event.getPlayer().getUniqueID().toString(),channel.left, channel.right, event.getComponent().createCopy().appendText(i + ""));
 			HideFaction.NETWORK.sendToAll(PacketChat.newChat(line));
 		}
 		//*/
