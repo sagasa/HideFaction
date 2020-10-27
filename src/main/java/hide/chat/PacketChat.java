@@ -157,9 +157,11 @@ public class PacketChat implements IMessage, IMessageHandler<PacketChat, IMessag
 				switch (msg.mode) {
 				case REQ_NEXT:
 					HideFaction.NETWORK.sendTo(chatChunkNext(HideFactionDB.getNextChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
+					System.out.println("新着 チャット送信 ");
 					break;
 				case REQ_PREV:
 					HideFaction.NETWORK.sendTo(chatChunkPrev(HideFactionDB.getPrevChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
+					System.out.println("過去 チャット送信 ");
 					break;
 				default:
 					break;
