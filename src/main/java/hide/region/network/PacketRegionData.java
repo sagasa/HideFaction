@@ -11,7 +11,7 @@ import java.util.UUID;
 import hide.core.HideFaction;
 import hide.region.EnumPermissionState;
 import hide.region.EnumRegionPermission;
-import hide.region.RegionManager;
+import hide.region.RegionHolder;
 import hide.region.RegionRect;
 import hide.region.RegionRule;
 import io.netty.buffer.ByteBuf;
@@ -42,7 +42,7 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 
 	private EnumMap<EnumRegionPermission, EnumPermissionState> defaultMap;
 
-	public static PacketRegionData defaultRule(RegionManager manager) {
+	public static PacketRegionData defaultRule(RegionHolder manager) {
 		PacketRegionData data = new PacketRegionData(DEFAULT_RULE);
 		data.defaultMap = manager.DefaultPermission;
 		return data;
@@ -50,7 +50,7 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 
 	private List<RegionRect> regionList;
 
-	public static PacketRegionData regionList(RegionManager manager) {
+	public static PacketRegionData regionList(RegionHolder manager) {
 		PacketRegionData data = new PacketRegionData(REGION_LIST);
 		data.regionList = manager.RegionList;
 		return data;
@@ -58,7 +58,7 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 
 	private Map<String, RegionRule> ruleMap;
 
-	public static PacketRegionData ruleMap(RegionManager manager) {
+	public static PacketRegionData ruleMap(RegionHolder manager) {
 		PacketRegionData data = new PacketRegionData(RULE_MAP);
 		data.ruleMap = manager.RuleMap;
 		return data;
@@ -150,25 +150,25 @@ public class PacketRegionData implements IMessage, IMessageHandler<PacketRegionD
 		if (!Minecraft.getMinecraft().isIntegratedServerRunning())
 			switch (msg.mode) {
 			case REGION_LIST:
-				RegionManager.getManager().RegionList = msg.regionList;
-				RegionManager.getManager().registerRegionMap();
+				RegionHolder.getManager().RegionList = msg.regionList;
+				RegionHolder.getManager().registerRegionMap();
 				HideFaction.log.info("receive RegionList from server");
 				break;
 			case DEFAULT_RULE:
-				RegionManager.getManager().DefaultPermission = msg.defaultMap;
-				RegionManager.getManager().registerRegionMap();
+				RegionHolder.getManager().DefaultPermission = msg.defaultMap;
+				RegionHolder.getManager().registerRegionMap();
 				HideFaction.log.info("receive DefaultRule from server");
 				break;
 			case RULE_MAP:
-				RegionManager.RuleMap = msg.ruleMap;
-				RegionManager.getManager().registerRegionMap();
+				RegionHolder.RuleMap = msg.ruleMap;
+				RegionHolder.getManager().registerRegionMap();
 				HideFaction.log.info("receive RuleMap from server");
 				break;
 			case OP_ADD:
-				RegionManager.OPPlayers.add(msg.uuid);
+				RegionHolder.OPPlayers.add(msg.uuid);
 				break;
 			case OP_REMOVE:
-				RegionManager.OPPlayers.remove(msg.uuid);
+				RegionHolder.OPPlayers.remove(msg.uuid);
 				break;
 			default:
 				break;

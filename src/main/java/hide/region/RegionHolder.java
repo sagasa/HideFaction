@@ -35,7 +35,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 /** ワールド紐づけ ブロックからレギオンへの高速検索システム サーバー側のみ */
-public class RegionManager {
+public class RegionHolder {
 
 	/** セッション毎の保護無視プレイヤーリスト サーバーサイドでのみ機能 */
 	public static final Set<UUID> OPPlayers = new HashSet<>();
@@ -47,7 +47,7 @@ public class RegionManager {
 
 	public EnumMap<EnumRegionPermission, EnumPermissionState> DefaultPermission = new EnumMap(EnumRegionPermission.class);
 
-	public RegionManager() {
+	public RegionHolder() {
 
 	}
 
@@ -207,24 +207,24 @@ public class RegionManager {
 	}
 
 	// ====== マネージャの格納系 ======
-	private static final Int2ObjectMap<RegionManager> regionManager = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
+	private static final Int2ObjectMap<RegionHolder> regionManager = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
 
 	public static void clearManager() {
 		regionManager.clear();
 	}
 
 	@SideOnly(Side.CLIENT)
-	public static RegionManager getManager() {
+	public static RegionHolder getManager() {
 		return getManager(Minecraft.getMinecraft().player.dimension, Side.CLIENT);
 	}
 
-	public static RegionManager getManager(int dim, Side side) {
+	public static RegionHolder getManager(int dim, Side side) {
 		// Mapにあったらそれを返す
-		RegionManager rm = regionManager.get(dim);
+		RegionHolder rm = regionManager.get(dim);
 		if (rm != null)
 			return rm;
 
-		rm = new RegionManager();
+		rm = new RegionHolder();
 		regionManager.put(dim, rm);
 		// リモートなら読み込まない
 		if (side == Side.CLIENT) {
@@ -245,7 +245,7 @@ public class RegionManager {
 	private static final String defaultRule = "defaultRule.json";
 	private static final String ruleMap = "rule.json";
 
-	public static void saveRegion(RegionManager manager, WorldServer world) {
+	public static void saveRegion(RegionHolder manager, WorldServer world) {
 		writeData(new File(world.getChunkSaveLocation(), regionList), manager.RegionList);
 		writeData(new File(world.getChunkSaveLocation(), defaultRule), manager.DefaultPermission);
 		writeData(new File(world.getSaveHandler().getWorldDirectory(), ruleMap), RuleMap);
@@ -262,7 +262,7 @@ public class RegionManager {
 	}
 
 	/**データの欠けがあればtrue*/
-	public static boolean loadRegion(RegionManager rm, WorldServer world) {
+	public static boolean loadRegion(RegionHolder rm, WorldServer world) {
 		boolean flag = false;
 		List<RegionRect> list = readData(new File(world.getChunkSaveLocation(), regionList), new TypeToken<List<RegionRect>>() {
 		}.getType());

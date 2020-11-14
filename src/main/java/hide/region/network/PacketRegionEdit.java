@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import hide.core.HideFaction;
 import hide.region.EnumPermissionState;
 import hide.region.EnumRegionPermission;
-import hide.region.RegionManager;
+import hide.region.RegionHolder;
 import hide.region.RegionRect;
 import hide.region.RegionRule;
 import io.netty.buffer.ByteBuf;
@@ -170,12 +170,12 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 
 	private void onMsgServer(MessageContext ctx) {
 		EntityPlayerMP player = ctx.getServerHandler().player;
-		RegionManager rm = RegionManager.getManager(player.dimension, Side.SERVER);
+		RegionHolder rm = RegionHolder.getManager(player.dimension, Side.SERVER);
 		player.getServer().addScheduledTask(() -> {
 			apply(rm);
 
 			System.out.println("receve Edit form Client");
-			RegionManager.saveRegion(rm, (WorldServer) player.world);
+			RegionHolder.saveRegion(rm, (WorldServer) player.world);
 			// 受信元以外に配信
 			for (EntityPlayer p : player.world.playerEntities)
 				if (p != player)
@@ -185,14 +185,14 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 
 	@SideOnly(Side.CLIENT)
 	private void onMsgClient(MessageContext ctx) {
-		RegionManager rm = RegionManager.getManager();
+		RegionHolder rm = RegionHolder.getManager();
 		Minecraft.getMinecraft().addScheduledTask(() -> {
 			apply(rm);
 		});
 		System.out.println("receve Edit form Server");
 	}
 
-	private void apply(RegionManager rm) {
+	private void apply(RegionHolder rm) {
 		if (mode == REGISTER)
 			rm.registerRegionMap();
 		else if ((mode & MASK_TARGET) == DEFAULT_RULE) {
@@ -204,7 +204,7 @@ public class PacketRegionEdit implements IMessage, IMessageHandler<PacketRegionE
 				rm.RuleMap.remove(name);
 		} else if ((mode & MASK_TARGET) == REGION_LIST) {
 			if ((mode & MASK_OPERATOR) == EDIT)
-				rm.RegionList.set(index, region);
+				rm.RegionList.get(index).writeFrom(region);
 			else if ((mode & MASK_OPERATOR) == ADD)
 				rm.RegionList.add(region);
 			else if ((mode & MASK_OPERATOR) == REMOVE)

@@ -93,7 +93,7 @@ public class HideChatManager {
 		ImmutablePair<ChatChannel, String> channel = HidePlayerDataManager.getServerData(ServerChatData.class, event.getPlayer()).sendChannel;
 
 		//*
-		//System.out.println(" " + event.getMessage() + " " + channel);
+		System.out.println(" " + event.getMessage() + " " + channel+" "+event.getPlayer());
 		HideChatLine line = HideFactionDB.logChat(event.getPlayer().getUniqueID().toString(), channel.left, channel.right, channel.left.getChannelName().appendSibling(event.getComponent()));
 		HideFaction.NETWORK.sendToAll(PacketChat.newChat(line));
 		//*/

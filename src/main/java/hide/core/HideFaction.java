@@ -1,5 +1,7 @@
 package hide.core;
 
+import java.io.IOException;
+
 import org.apache.logging.log4j.Logger;
 
 import hide.chat.CommandChat;
@@ -13,26 +15,33 @@ import hide.core.gui.FactionGUIHandler.HideGuiProvider;
 import hide.core.gui.GuiHideChat;
 import hide.core.gui.GuiHideNewChat;
 import hide.core.network.PacketSimpleCmd;
-import hide.faction.command.Faction;
+import hide.faction.CommandFaction;
 import hide.faction.data.FactionData;
 import hide.faction.gui.FactionContainer;
 import hide.faction.gui.FactionGuiContainer;
+import hide.region.ItemRegionEdit;
 import hide.region.PermissionManager;
 import hide.region.RegionCommand;
 import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
 import hide.region.network.PacketRegionEdit;
+import hide.schedule.ScheduleManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -44,9 +53,11 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.handshake.NetworkDispatcher;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -93,7 +104,6 @@ public class HideFaction {
 			HideCoreHook.GuiNewChat = GuiHideNewChat::new;
 
 		}
-		System.out.println(NetworkDispatcher.class);
 	}
 
 	@EventHandler
@@ -105,23 +115,35 @@ public class HideFaction {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new FactionGUIHandler());
-
+		ScheduleManager.load();
 		// some example code
 		log.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
 
 	}
 
 	@EventHandler
-	public void serverStart(FMLServerStartingEvent event) {
+	public void serverStart(FMLServerStartingEvent event) throws IOException {
 		HideFactionDB.start();
-		event.registerServerCommand(new Faction());
+		event.getServer().getCommandManager().executeCommand(event.getServer(), "/errCommand");
+		//		ICommandSender icommandsender = CommandSenderWrapper.create(sender).withEntity(entity, new Vec3d(d0, d1, d2)).withSendCommandFeedback(server.worlds[0].getGameRules().getBoolean("commandBlockOutput"));
+
+		event.registerServerCommand(new CommandFaction());
 		event.registerServerCommand(new RegionCommand());
 		event.registerServerCommand(new CommandChat());
+		ScheduleManager.start(event.getServer(), 1603837200000l);
+
 	}
 
 	@EventHandler
 	public void serverStop(FMLServerStoppedEvent event) {
 		HideFactionDB.end();
+	}
+
+	@SubscribeEvent()
+	public void serverTick(ServerTickEvent event) {
+		if(event.phase==Phase.END) {
+			ScheduleManager.update();
+		}
 	}
 
 	@SubscribeEvent()
@@ -147,7 +169,7 @@ public class HideFaction {
 	public void onEvent(GuiOpenEvent event) {
 		//System.out.println(event.getGui());
 		if (event.getGui() instanceof GuiChat) {
-			event.setGui(new GuiHideChat(((GuiChat)event.getGui()).defaultInputFieldText));
+			event.setGui(new GuiHideChat(((GuiChat) event.getGui()).defaultInputFieldText));
 		}
 	}
 
@@ -166,6 +188,21 @@ public class HideFaction {
 		//		.forEach(rg -> rg.drawRegionRect(true,event.getPartialTicks(),0.8f,1f,0));
 		RegionEditor.draw(event.getPartialTicks());
 		// GlStateManager.enableDepth();
+	}
+
+	@ObjectHolder(MODID)
+	public static class ITEMS {
+		public static final Item edit_region = null;
+	}
+
+	@SubscribeEvent
+	public void registerItems(RegistryEvent.Register<Item> event) {
+		event.getRegistry().registerAll(new ItemRegionEdit());
+	}
+
+	@SubscribeEvent
+	public void registerModels(ModelRegistryEvent event) {
+		ModelLoader.setCustomModelResourceLocation(ITEMS.edit_region, 0, new ModelResourceLocation(ITEMS.edit_region.getRegistryName(), "inventory"));
 	}
 
 	static FactionData data = new FactionData();

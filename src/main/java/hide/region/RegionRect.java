@@ -11,7 +11,7 @@ import org.lwjgl.opengl.GL11;
 import com.google.gson.annotations.SerializedName;
 
 import hide.core.HideFaction;
-import hide.region.RegionManager.ChunkRegingMap;
+import hide.region.RegionHolder.ChunkRegingMap;
 import hide.util.DrawUtil;
 import hide.util.HideByteBufUtil;
 import hide.util.HideMath;
@@ -115,7 +115,7 @@ public class RegionRect implements IMessage {
 		}
 		// ルール名があったら探す
 		if (Strings.isNotBlank(_ruleName))
-			_rule = RegionManager.RuleMap.get(_ruleName);
+			_rule = RegionHolder.RuleMap.get(_ruleName);
 		//コリジョン作成
 		collision = new AxisAlignedBB(new BlockPos(_start), new BlockPos(_end));
 	}
@@ -190,8 +190,8 @@ public class RegionRect implements IMessage {
 
 		final int textColor = 0xFFFFFF;
 		if (showInfo) {
-			drawString(makeVecString(_start), 0, 0, 0, pX, pY, pZ, textColor);
-			drawString(makeVecString(_end), vX, vY, vZ, pX, pY, pZ, textColor);
+			drawString("Start "+makeVecString(_start), 0, 0, 0, pX, pY, pZ, textColor);
+			drawString("End "+makeVecString(_end), vX, vY, vZ, pX, pY, pZ, textColor);
 
 			// 中央に描画するリスト
 			drawArray.clear();
@@ -288,6 +288,15 @@ public class RegionRect implements IMessage {
 	 * @param vecB */
 	public boolean isHit(Vec3d vecA, Vec3d vecB) {
 		return collision.calculateIntercept(vecA, vecB) != null;
+	}
+
+	/**内容をコピー チェックもするよ*/
+	public void writeFrom(RegionRect rg) {
+		_start = rg._start;
+		_end = rg._end;
+		_ruleName = rg._ruleName;
+		_tag = rg._tag;
+		checkValue();
 	}
 
 	@Override

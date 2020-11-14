@@ -8,7 +8,7 @@ import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 import hide.core.HideFaction;
-import hide.region.RegionManager;
+import hide.region.RegionHolder;
 import hide.region.RegionRect;
 import hide.region.network.PacketRegionEdit;
 import hide.util.DrawUtil;
@@ -20,7 +20,6 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.Vec3i;
 
 public class RegionEditGUI extends GuiScreen {
 
@@ -31,35 +30,18 @@ public class RegionEditGUI extends GuiScreen {
 	}
 
 	private RegionRect getRegion() {
-		return RegionManager.getManager().RegionList.get(regionIndex);
+		return RegionHolder.getManager().RegionList.get(regionIndex);
 	}
 
 	private static final int deleteRegion = 0x1;
+	private static final int deleteCheck = 0x6;
+
 	private static final int addRegion = 0x2;
 
 	private static final int removeTag = 0x3;
 	private static final int addTag = 0x4;
 
-	private static final int syncTag = 0x5;
-
 	private static final int ruleEdit = 0x5;
-
-	private static final int TARGET = 0xF00;
-	private static final int startX = 0x100;
-	private static final int startY = 0x200;
-	private static final int startZ = 0x300;
-	private static final int endX = 0x400;
-	private static final int endY = 0x500;
-	private static final int endZ = 0x600;
-
-	private static final int OPERATOR = 0xF000;
-	private static final int add = 0x0000;
-	private static final int remove = 0x1000;
-
-	private static final int MAGNIFICATION = 0xF0000;
-	private static final int x1 = 0x00000;
-	private static final int x5 = 0x10000;
-	private static final int x10 = 0x20000;
 
 	private GuiTextField ruleName;
 
@@ -67,67 +49,46 @@ public class RegionEditGUI extends GuiScreen {
 
 	private ListView tagList;
 	private GuiTextField tagEdit;
+	private GuiButton delete;
 
 	@Override
 	public void initGui() {
 		super.initGui();
-		int w = width / 2 + 55, h = height / 2 - 95;
+		int w = width / 2, h = height / 2;
 
-		addButton(startX, w, h);
-		h += space;
-		addButton(startY, w, h);
-		h += space;
-		addButton(startZ, w, h);
-		h += space;
-
-		addButton(endX, w, h);
-		h += space;
-		addButton(endY, w, h);
-		h += space;
-		addButton(endZ, w, h);
-		h += space;
-
-		buttonList.add(new GuiButton(deleteRegion, w - 20, h + 5, 120, 20, "Delete"));
-
-		w = width / 2;
-		h = height / 2;
-
+		delete = new GuiButton(deleteCheck, w - 70, h + 45, 140, 20, "Delete");
+		buttonList.add(delete);
 		// タグ編集
-		tagEdit = new GuiTextField(0, this.fontRenderer, w - 155, h - 95, 120, this.fontRenderer.FONT_HEIGHT + 2);
+		tagEdit = new GuiTextField(0, this.fontRenderer, w - 70, h - 110, 140, this.fontRenderer.FONT_HEIGHT + 2);
 		tagEdit.setFocused(true);
 		tagEdit.setEnabled(false);
 		tagEdit.setText("");
 		tagEdit.setMaxStringLength(50);
 
 		// ルール編集
-		ruleName = new GuiTextField(0, this.fontRenderer, w - 135, h + 36, 80, 18);
+		ruleName = new GuiTextField(0, this.fontRenderer, w - 45, h + 20, 80, 20);
 		ruleName.setFocused(true);
 		ruleName.setText(getRegion().getRuleName());
 		ruleName.setMaxStringLength(50);
 
-		buttonList.add(new GuiButton(ruleEdit, w - 50, h + 35, 60, 20, "EditRule"));
+		buttonList.add(new GuiButton(ruleEdit, w + 38, h + 20, 32, 20, "Edit"));
 
 		tagList = new ListView();
-	}
-
-	private void addButton(int id, int x, int y) {
-		buttonList.add(new GuiButton(id | add | x1, x - 40, y, 20, 20, "+1"));
-		buttonList.add(new GuiButton(id | add | x5, x - 60, y, 20, 20, "+5"));
-		buttonList.add(new GuiButton(id | add | x10, x - 80, y, 20, 20, "+10"));
-		buttonList.add(new GuiButton(id | remove | x1, x + 40, y, 20, 20, "-1"));
-		buttonList.add(new GuiButton(id | remove | x5, x + 60, y, 20, 20, "-5"));
-		buttonList.add(new GuiButton(id | remove | x10, x + 80, y, 20, 20, "-10"));
 	}
 
 	private static final ResourceLocation BG = new ResourceLocation(HideFaction.MODID, "textures/gui/regionedit.png");
 
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-		super.drawScreen(mouseX, mouseY, partialTicks);
+
 		int w, h;
 
 		w = width / 2;
 		h = height / 2;
+
+		drawRect(w - 80, h - 115, w + 80, h + 70, 0xFFaeaeae);
+
+		super.drawScreen(mouseX, mouseY, partialTicks);
 
 		tagEdit.drawTextBox();
 		ruleName.drawTextBox();
@@ -139,28 +100,17 @@ public class RegionEditGUI extends GuiScreen {
 		w = width / 2 + 65;
 		h = height / 2 - 95 + (space - fontRenderer.FONT_HEIGHT) / 2;
 
-		drawStringBG("start X " + (region.getStartPos().getX()), w, h, white);
-		h += space;
-		drawStringBG("start Y " + (region.getStartPos().getY()), w, h, white);
-		h += space;
-		drawStringBG("start Z " + (region.getStartPos().getZ()), w, h, white);
-		h += space;
-		drawStringBG("size X " + (region.getEndPos().getX() - region.getStartPos().getX()), w, h, white);
-		h += space;
-		drawStringBG("size Y " + (region.getEndPos().getY() - region.getStartPos().getY()), w, h, white);
-		h += space;
-		drawStringBG("size Z " + (region.getEndPos().getZ() - region.getStartPos().getZ()), w, h, white);
 		h += space;
 
 		w = width / 2;
 		h = height / 2;
 
 		// ルールの状態表示
-		DrawUtil.drawRect(w - 155, h + 35, w - 135, h + 55, 0.5f, 0.5f, 0.5f, 0.4f);
+		DrawUtil.drawRect(w - 70, h + 20, w - 50, h + 40, 0.5f, 0.5f, 0.5f, 0.4f);
 		if (region.haveRule())
-			DrawUtil.drawRect(w - 153, h + 37, w - 137, h + 53, 0f, 1f, 0f, 0.6f);
+			DrawUtil.drawRect(w - 68, h + 22, w - 52, h + 38, 0f, 1f, 0f, 0.6f);
 		else
-			DrawUtil.drawRect(w - 153, h + 37, w - 137, h + 53, 1f, 0f, 0f, 0.6f);
+			DrawUtil.drawRect(w - 68, h + 22, w - 52, h + 38, 1f, 0f, 0f, 0.6f);
 	}
 
 	// 半透明の背景の上に描画
@@ -188,50 +138,14 @@ public class RegionEditGUI extends GuiScreen {
 			tagEdit.setEnabled(false);
 			ruleName.setEnabled(true);
 		} else if (id == deleteRegion) {
-			System.out.println("DELETE");
-
+			HideFaction.NETWORK.sendToServer(PacketRegionEdit.removeRegion(regionIndex));
+			HideFaction.NETWORK.sendToServer(PacketRegionEdit.register());
+		} else if (id == deleteCheck) {
+			delete.displayString = "Do Delete !!";
+			delete.id = deleteRegion;
 		} else {
-			// 数値
-			int change = 0;
-			if ((id & OPERATOR) == add)
-				change = 1;
-			else if ((id & OPERATOR) == remove)
-				change = -1;
-
-			if ((id & MAGNIFICATION) == x5)
-				change *= 5;
-			else if ((id & MAGNIFICATION) == x10)
-				change *= 10;
-
-			Vec3i start = region.getStartPos();
-			Vec3i end = region.getEndPos();
-			if ((id & TARGET) == startX)
-				start = new Vec3i(start.getX() + change, start.getY(), start.getZ());
-			if ((id & TARGET) == startY)
-				start = new Vec3i(start.getX(), start.getY() + change, start.getZ());
-			if ((id & TARGET) == startZ)
-				start = new Vec3i(start.getX(), start.getY(), start.getZ() + change);
-
-			if ((id & TARGET) == endX)
-				end = new Vec3i(end.getX() + change, end.getY(), end.getZ());
-			if ((id & TARGET) == endY)
-				end = new Vec3i(end.getX(), end.getY() + change, end.getZ());
-			if ((id & TARGET) == endZ)
-				end = new Vec3i(end.getX(), end.getY(), end.getZ() + change);
-
-			boolean needRegister = !isChunkEquals(start, region.getStartPos())
-					|| !isChunkEquals(end, region.getEndPos());
-			region.setPos(start, end);
-			HideFaction.NETWORK.sendToServer(PacketRegionEdit.editRegion(regionIndex, region));
-
-			// チャンク単位の変更があれば
-			if (needRegister)
-				HideFaction.NETWORK.sendToServer(PacketRegionEdit.register());
+			//HideFaction.NETWORK.sendToServer(PacketRegionEdit.editRegion(regionIndex, region));
 		}
-	}
-
-	private static boolean isChunkEquals(Vec3i pos0, Vec3i pos1) {
-		return pos0.getX() >> 4 == pos1.getX() >> 4 && pos0.getZ() >> 4 == pos1.getZ() >> 4;
 	}
 
 	@Override
@@ -289,7 +203,7 @@ public class RegionEditGUI extends GuiScreen {
 		private ArrayList<ListCell> list = new ArrayList<>();
 
 		public ListView() {
-			super(RegionEditGUI.this.mc, 115, 100, 0, 100, 22);
+			super(RegionEditGUI.this.mc, 135, 100, 0, 100, 22);
 			setHasListHeader(false, 0);
 			visible = true;
 			updateSize();
@@ -315,10 +229,10 @@ public class RegionEditGUI extends GuiScreen {
 		/** サイズ更新 */
 		public void updateSize() {
 			int w = RegionEditGUI.this.width / 2, h = RegionEditGUI.this.height / 2;
-			left = w - 155;
-			top = h - 75;
-			right = w - 35;
-			bottom = h + 25;
+			left = w - 70;
+			top = h - 95;
+			right = w + 70;
+			bottom = h + 15;
 		}
 
 		@Override
@@ -358,7 +272,7 @@ public class RegionEditGUI extends GuiScreen {
 
 		@Override
 		public int getListWidth() {
-			return 115;
+			return 135;
 		}
 
 		@Override

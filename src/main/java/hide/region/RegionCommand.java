@@ -1,21 +1,19 @@
 package hide.region;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 
 import hide.core.HideFaction;
-import hide.core.network.PacketSimpleCmd;
-import hide.core.network.PacketSimpleCmd.Cmd;
+import hide.region.network.PacketRegionData;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.command.WrongUsageException;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
+import net.minecraftforge.server.command.TextComponentHelper;
 
 public class RegionCommand extends CommandBase {
 
@@ -31,23 +29,39 @@ public class RegionCommand extends CommandBase {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "";
+		return "commands.region.usage";
+	}
+
+	public static void sendCmdRes(ICommandSender sender, String msg, Object... obj) {
+		sender.sendMessage(TextComponentHelper.createComponentTranslation(sender, msg, obj));
 	}
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		System.out.println("exc" + Arrays.toString(args) + " " + new ChunkPos(sender.getPosition()));
-
-
-
-		// ((EntityPlayer) sender.getCommandSenderEntity())
-		// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
-		// sender.getEntityWorld().getScoreboard().getTeam(teamName);
-
-		// System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()).getFriendlyFlags());
-		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
-		if (sender.getCommandSenderEntity() instanceof EntityPlayer) {
-			HideFaction.NETWORK.sendTo(new PacketSimpleCmd(Cmd.OpenRegionGUI), (EntityPlayerMP) sender.getCommandSenderEntity());
+		// TODO 自動生成されたメソッド・スタブ
+		if (args.length <= 0) {
+			throw new WrongUsageException("commands.region.usage", new Object[0]);
+		} else {
+			EntityPlayerMP player = args.length >= 2 ? getPlayer(server, sender, args[1]) : getCommandSenderAsPlayer(sender);
+			if (args[0].equalsIgnoreCase("op")) {
+				sendCmdRes(sender, "commands.region.op.success", player.getName());
+				HideFaction.NETWORK.sendTo(PacketRegionData.addOP(player.getUniqueID()), player);
+				RegionHolder.OPPlayers.add(player.getUniqueID());
+			} else if (args[0].equalsIgnoreCase("deop")) {
+				sendCmdRes(sender, "commands.region.deop.success", player.getName());
+				HideFaction.NETWORK.sendTo(PacketRegionData.removeOP(player.getUniqueID()), player);
+				RegionHolder.OPPlayers.remove(player.getUniqueID());
+			}  else if (args[0].equalsIgnoreCase("gui")) {
+				player.openGui(HideFaction.INSTANCE, HideFaction.FACTION_GUI_ID,
+						sender.getEntityWorld(), 0, 0, 0);
+				// ((EntityPlayer) sender.getCommandSenderEntity())
+				// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));
+				/*
+				System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()));
+				System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
+				sender.getEntityWorld().getMapStorage().setData("hideFaction", new FactionWorldSave().test());
+				//*/
+			}
 		}
 	}
 

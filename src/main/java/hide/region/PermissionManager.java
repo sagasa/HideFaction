@@ -1,7 +1,5 @@
 package hide.region;
 
-import org.lwjgl.input.Mouse;
-
 import hide.core.HideFaction;
 import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
@@ -29,7 +27,7 @@ public class PermissionManager {
 	/**サーバー側からファクションデータを配信*/
 	public static void provideRegionData(EntityPlayer player) {
 		EntityPlayerMP playermp = (EntityPlayerMP) player;
-		RegionManager rm = RegionManager.getManager(player.dimension, Side.SERVER);
+		RegionHolder rm = RegionHolder.getManager(player.dimension, Side.SERVER);
 		HideFaction.NETWORK.sendTo(PacketRegionData.defaultRule(rm), playermp);
 		HideFaction.NETWORK.sendTo(PacketRegionData.ruleMap(rm), playermp);
 		HideFaction.NETWORK.sendTo(PacketRegionData.regionList(rm), playermp);
@@ -54,12 +52,7 @@ public class PermissionManager {
 	@SubscribeEvent()
 	public void guiEdit(ClientTickEvent event) {
 		if (event.phase == Phase.END) {
-
-			if (Mouse.isButtonDown(0))
-				RegionEditor.select();
-			if (Mouse.isButtonDown(1))
-				RegionEditor.edit();
-
+			RegionEditor.update();
 		}
 	}
 	//========= キャンセル系 ===========
@@ -69,7 +62,7 @@ public class PermissionManager {
 	@SubscribeEvent()
 	public void leftClick(LeftClickBlock event) {
 		if (event.getSide() == Side.CLIENT) {
-			if (!RegionManager.getManager().permission(event.getPos(), event.getEntityPlayer(),
+			if (!RegionHolder.getManager().permission(event.getPos(), event.getEntityPlayer(),
 					EnumRegionPermission.BlockDestroy)) {
 				event.setCanceled(true);
 			}
@@ -79,17 +72,20 @@ public class PermissionManager {
 	/** サーバー側で破壊をキャンセル */
 	@SubscribeEvent()
 	public void leftBreak(BreakEvent event) {
-		if (!RegionManager.getManager(event.getPlayer().dimension, Side.SERVER).permission(event.getPos(), event.getPlayer(),
+		if (!RegionHolder.getManager(event.getPlayer().dimension, Side.SERVER).permission(event.getPos(), event.getPlayer(),
 				EnumRegionPermission.BlockDestroy)) {
 			event.setCanceled(true);
 		}
+		//編集アイテム
+		if (event.getPlayer().getHeldItemMainhand().getItem() == HideFaction.ITEMS.edit_region)
+			event.setCanceled(true);
 	}
 
 	//-- 設置 --
 
 	@SubscribeEvent()
 	public void place(PlaceEvent event) {
-		if (!RegionManager.getManager(event.getPlayer().dimension, Side.SERVER).permission(event.getPos(), event.getPlayer(),
+		if (!RegionHolder.getManager(event.getPlayer().dimension, Side.SERVER).permission(event.getPos(), event.getPlayer(),
 				EnumRegionPermission.BlockPlace)) {
 			event.setCanceled(true);
 		}
@@ -101,7 +97,7 @@ public class PermissionManager {
 		//ブロックインタラクト
 		if (!(event.getItemStack().getItem() instanceof ItemBlock && event.getEntityPlayer().isSneaking())) {
 			Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
-			RegionManager rm = RegionManager.getManager(event.getEntityPlayer().dimension, event.getSide());
+			RegionHolder rm = RegionHolder.getManager(event.getEntityPlayer().dimension, event.getSide());
 			// チェスト
 			if (block instanceof BlockChest && !rm.permission(event.getPos(), event.getEntityPlayer(), EnumRegionPermission.ChestInteract)) {
 				event.setCanceled(true);
