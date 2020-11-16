@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import hide.chat.HideChatManager.ChatChannel;
 import hide.chat.HideChatManager.ServerChatData;
+import hide.core.FactionUtil;
 import hide.core.HideFaction;
 import hide.core.HidePlayerDataManager;
 import hide.core.HideUtil;
@@ -94,7 +95,7 @@ public class PacketChatState implements IMessage, IMessageHandler<PacketChatStat
 					List<ImmutablePair<ChatChannel, String>> list = new ArrayList<>();
 					for (ImmutablePair<ChatChannel, String> c : msg.channel_set) {
 						if (c.left == ChatChannel.Team)
-							c = new ImmutablePair<>(ChatChannel.Team, HideChatManager.getFaction(player));
+							c = new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction(player));
 						list.add(c);
 					}
 					HideFaction.NETWORK.sendTo(cannelState(list), player);

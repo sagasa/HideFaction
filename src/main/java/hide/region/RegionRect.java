@@ -66,6 +66,10 @@ public class RegionRect implements IMessage {
 		return _end;
 	}
 
+	public boolean haveTag() {
+		return 0 < _tag.length;
+	}
+
 	public RegionRect setTag(String... name) {
 		_tag = name;
 		return this;
@@ -190,16 +194,16 @@ public class RegionRect implements IMessage {
 
 		final int textColor = 0xFFFFFF;
 		if (showInfo) {
-			drawString("Start "+makeVecString(_start), 0, 0, 0, pX, pY, pZ, textColor);
-			drawString("End "+makeVecString(_end), vX, vY, vZ, pX, pY, pZ, textColor);
+			drawString("Start " + makeVecString(_start), 0, 0, 0, pX, pY, pZ, textColor);
+			drawString("End " + makeVecString(_end), vX, vY, vZ, pX, pY, pZ, textColor);
 
 			// 中央に描画するリスト
 			drawArray.clear();
 			for (String str : _tag) {
-				drawArray.add("tag : "+str);
+				drawArray.add("tag : " + str);
 			}
 			drawArray.add("RuleName : " + _ruleName);
-			if(haveRule()) {
+			if (haveRule()) {
 				drawArray.add("Priority : " + _rule.priority);
 				if (Strings.isNotBlank(_rule.targetName)) {
 					drawArray.add("Target : " + _rule.targetName);
@@ -208,7 +212,7 @@ public class RegionRect implements IMessage {
 				for (Entry<EnumRegionPermission, EnumPermissionState> entry : _rule.getMap().entrySet()) {
 					drawArray.add(entry.getKey() + " : " + entry.getValue());
 				}
-			}else {
+			} else {
 				drawArray.add("Not Set");
 			}
 

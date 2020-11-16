@@ -11,8 +11,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import com.google.common.collect.ImmutableSet;
 
 import hide.chat.HideChatLine;
-import hide.chat.HideChatManager;
 import hide.chat.HideChatManager.ChatChannel;
+import hide.core.FactionUtil;
 import hide.core.HideRefCounter;
 import hide.core.gui.ChatScopeHolder.ChatChunk;
 import net.minecraft.client.Minecraft;
@@ -68,7 +68,7 @@ public class GuiHideNewChat extends GuiNewChat {
 		scopeMap.clear();
 		channelView = ImmutableSet.copyOf(channelView.stream().map((pair) -> {
 			if (pair.getLeft() == ChatChannel.Team)
-				return new ImmutablePair<>(pair.getLeft(), HideChatManager.getFaction());
+				return new ImmutablePair<>(pair.getLeft(), FactionUtil.getFaction());
 			return pair;
 		}).iterator());
 	}

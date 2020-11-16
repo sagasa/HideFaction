@@ -8,19 +8,16 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import hide.core.FactionUtil;
 import hide.core.HideFaction;
 import hide.core.HideFactionDB;
 import hide.core.HidePlayerDataManager;
 import hide.core.HidePlayerDataManager.IHidePlayerData;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.scoreboard.ScorePlayerTeam;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.event.ServerChatEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class HideChatManager {
 
@@ -85,7 +82,7 @@ public class HideChatManager {
 	}
 
 	public static void onLogin(EntityPlayerMP player) {
-		String faction = getFaction(player);
+		String faction = FactionUtil.getFaction(player);
 	}
 
 	public static void onChat(ServerChatEvent event) {
@@ -119,22 +116,6 @@ public class HideChatManager {
 
 	public static String getTitle(EntityPlayer player) {
 		return null;//TODO
-	}
-
-	public static String getFaction(EntityPlayer player) {
-		if (player == null || player.world == null)
-			return "";
-		ScorePlayerTeam team = player.world.getScoreboard().getPlayersTeam(player.getName());
-		return team == null ? "" : team.getName();
-	}
-
-	@SideOnly(Side.CLIENT)
-	public static String getFaction() {
-		EntityPlayer player = Minecraft.getMinecraft().player;
-		if (player == null || player.world == null)
-			return "";
-		ScorePlayerTeam team = player.world.getScoreboard().getPlayersTeam(player.getName());
-		return team == null ? "" : team.getName();
 	}
 
 	public static class ServerChatData implements IHidePlayerData {

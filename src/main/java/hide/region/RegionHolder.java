@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import com.google.common.io.Files;
 import com.google.gson.Gson;
@@ -43,7 +45,7 @@ public class RegionHolder {
 	public List<RegionRect> RegionList = new ArrayList<>();
 
 	private RuleChunkRegingMap _ruleRegionMap = new RuleChunkRegingMap();
-	private ChunkRegingMap _areaRegionMap = new ChunkRegingMap();
+	private ChunkRegingMap _tagRegionMap = new ChunkRegingMap();
 
 	public EnumMap<EnumRegionPermission, EnumPermissionState> DefaultPermission = new EnumMap(EnumRegionPermission.class);
 
@@ -79,12 +81,12 @@ public class RegionHolder {
 		listenerList.forEach(r -> r.run());
 		RegionList.forEach(rg -> rg.checkValue());
 		_ruleRegionMap.clear();
-		_areaRegionMap.clear();
+		_tagRegionMap.clear();
 		for (RegionRect region : RegionList) {
 			if (region.haveRule())
 				region.register(_ruleRegionMap);
-			else
-				region.register(_areaRegionMap);
+			if (region.haveTag())
+				region.register(_tagRegionMap);
 		}
 		_ruleRegionMap.sort();
 	}
@@ -101,29 +103,43 @@ public class RegionHolder {
 		return state;
 	}
 
+	public Stream<RegionRect> getTagRegion(BlockPos pos) {
+		return _tagRegionMap.getRegions(pos);
+	}
+
+	/**タグ全一致のみ*/
+	public static Stream<RegionRect> andFilter(Stream<RegionRect> stream, String... tag) {
+		return stream.filter(rg -> andSerch(tag, rg.getTag()));
+	}
+
+	/**タグのどれかが一致*/
+	public static Stream<RegionRect> orFilter(Stream<RegionRect> stream, String... tag) {
+		return stream.filter(rg -> orSerch(tag, rg.getTag()));
+	}
+
 	/** チャンク-レギオンリストのMap */
-	public class ChunkRegingMap {
+	protected class ChunkRegingMap {
 		protected Map<ChunkPos, List<RegionRect>> chunkMap = new HashMap<>();
 
-		public void clear() {
+		void clear() {
 			chunkMap.clear();
 		}
 
-		public void addToMap(ChunkPos pos, RegionRect rect) {
+		void addToMap(ChunkPos pos, RegionRect rect) {
 			if (!chunkMap.containsKey(pos))
 				chunkMap.put(pos, new ArrayList());
 			chunkMap.get(pos).add(rect);
 		}
 
-		public RegionRect[] getRegions(BlockPos pos) {
+		Stream<RegionRect> getRegions(BlockPos pos) {
 			ChunkPos cPos = new ChunkPos(pos);
 			if (!chunkMap.containsKey(cPos))
-				return null;
-			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos)).toArray(RegionRect[]::new);
+				return Collections.EMPTY_LIST.stream();
+			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos));
 		}
 
 		/**タグ全一致のみ*/
-		public RegionRect getRegionAnd(BlockPos pos, String... tag) {
+		RegionRect getRegionAnd(BlockPos pos, String... tag) {
 			ChunkPos cPos = new ChunkPos(pos);
 			if (!chunkMap.containsKey(cPos))
 				return null;
@@ -132,7 +148,7 @@ public class RegionHolder {
 		}
 
 		/**タグのどれかが一致*/
-		public RegionRect getRegionOr(BlockPos pos, String... tag) {
+		RegionRect getRegionOr(BlockPos pos, String... tag) {
 			ChunkPos cPos = new ChunkPos(pos);
 			if (!chunkMap.containsKey(cPos))
 				return null;
@@ -169,15 +185,15 @@ public class RegionHolder {
 	}
 
 	/** チャンク-レギオンリストのMap ルールがついてるレギオンのみ利用 */
-	public class RuleChunkRegingMap extends ChunkRegingMap {
+	protected class RuleChunkRegingMap extends ChunkRegingMap {
 		// フィルタリング
 		@Override
-		public void addToMap(ChunkPos pos, RegionRect rect) {
+		void addToMap(ChunkPos pos, RegionRect rect) {
 			if (rect.haveRule())
 				super.addToMap(pos, rect);
 		}
 
-		public void sort() {
+		void sort() {
 			chunkMap.values().forEach(list -> list.sort(
 					(Comparator<RegionRect>) (r0, r1) -> r0.getRule().priority - r1.getRule().priority));
 		}

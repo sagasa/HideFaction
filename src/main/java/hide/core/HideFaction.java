@@ -76,6 +76,8 @@ public class HideFaction {
 		return log;
 	}
 
+
+
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		log = event.getModLog();

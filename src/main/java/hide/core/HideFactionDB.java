@@ -17,7 +17,6 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import com.google.common.collect.Lists;
 
 import hide.chat.HideChatLine;
-import hide.chat.HideChatManager;
 import hide.chat.HideChatManager.ChatChannel;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.text.ITextComponent;
@@ -128,7 +127,7 @@ public class HideFactionDB {
 				sb.append("')");
 			} else if (pair.left == ChatChannel.Team) {
 				sb.append("and ChannelName = '");
-				sb.append(HideChatManager.getFaction(player));
+				sb.append(FactionUtil.getFaction(player));
 				sb.append("'");
 			}
 		}

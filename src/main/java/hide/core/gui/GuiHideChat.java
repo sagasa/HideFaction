@@ -6,9 +6,9 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.google.common.collect.ImmutableSet;
 
-import hide.chat.HideChatManager;
 import hide.chat.HideChatManager.ChatChannel;
 import hide.chat.PacketChatState;
+import hide.core.FactionUtil;
 import hide.core.HideFaction;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiChat;
@@ -46,12 +46,12 @@ public class GuiHideChat extends GuiChat {
 			HideFaction.NETWORK.sendToServer(PacketChatState.cannelSent(Global));
 			break;
 		case 11:
-			ImmutablePair<ChatChannel, String> team = new ImmutablePair<>(ChatChannel.Team, HideChatManager.getFaction());
+			ImmutablePair<ChatChannel, String> team = new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction());
 			newChat.setChannelView(ImmutableSet.of(team, Info));
 			HideFaction.NETWORK.sendToServer(PacketChatState.cannelSent(team));
 			break;
 		case 12:
-			newChat.setChannelView(ImmutableSet.of(new ImmutablePair<>(ChatChannel.Team, HideChatManager.getFaction()), Global, Info));
+			newChat.setChannelView(ImmutableSet.of(new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction()), Global, Info));
 			HideFaction.NETWORK.sendToServer(PacketChatState.cannelSent(Global));
 			break;
 
