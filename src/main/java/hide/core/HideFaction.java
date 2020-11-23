@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.Logger;
 
+import hide.capture.CaptureManager;
 import hide.chat.CommandChat;
 import hide.chat.HideChatManager;
 import hide.chat.HideChatManager.ServerChatData;
@@ -76,8 +77,6 @@ public class HideFaction {
 		return log;
 	}
 
-
-
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		log = event.getModLog();
@@ -133,7 +132,7 @@ public class HideFaction {
 		event.registerServerCommand(new RegionCommand());
 		event.registerServerCommand(new CommandChat());
 		ScheduleManager.start(event.getServer(), 1603837200000l);
-
+		CaptureManager cm = new CaptureManager(event.getServer());
 	}
 
 	@EventHandler
@@ -143,7 +142,7 @@ public class HideFaction {
 
 	@SubscribeEvent()
 	public void serverTick(ServerTickEvent event) {
-		if(event.phase==Phase.END) {
+		if (event.phase == Phase.END) {
 			ScheduleManager.update();
 		}
 	}

@@ -109,8 +109,9 @@ public class Schedule {
 			for (int i = entryList.size() - 1; 0 <= i; i--) {
 				ScheduleEntry entry = entryList.get(i);
 				//未到達orセクション区分なし
-				if (lastTime <= entry.time || entry.mode == SectionMode.NONE)
+				if (time < entry.time || entry.mode == SectionMode.NONE)
 					continue;
+				System.out.println(entry.section+" "+entry.mode+" "+entry.time+" ");
 				//１日経ってないなら前回タイムでbreak
 				if (lastDate == date && entry.time < lastTime)
 					break;
@@ -325,7 +326,7 @@ public class Schedule {
 					else
 						obj.addProperty("time", formatHMM.format(src.time));
 					if (src.interval != 0) {
-						obj.addProperty("interval", formatHMM.format(src.interval));
+						obj.addProperty("interval", formatHMM_GMT.format(src.interval));
 						if (src.end != ScheduleEntryData.defaultEnd)
 							obj.addProperty("end", formatHMM.format(src.end));
 					}
@@ -352,7 +353,7 @@ public class Schedule {
 					if (obj.has("interval")) {
 						schedule.interval = toTime(obj.get("interval").getAsString(), false);
 						if (obj.has("end"))
-							schedule.end = toTime(obj.get("end").getAsString(), false) + TimeZone.getDefault().getOffset(System.currentTimeMillis());
+							schedule.end = toTime(obj.get("end").getAsString(), true);
 						else
 							schedule.end = ScheduleEntryData.defaultEnd;
 					}
