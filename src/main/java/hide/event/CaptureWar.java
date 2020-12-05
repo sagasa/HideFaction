@@ -6,21 +6,22 @@ import hide.capture.CapUpdateEvent;
 import hide.capture.CaptureManager;
 import hide.capture.CaptureManager.CapEntry;
 import hide.capture.CaptureManager.CountMap;
+import hide.core.HideFaction;
+import hide.types.base.DataBase;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-public class CaptureWar implements IHideEvent {
+public class CaptureWar extends DataBase implements IHideEvent {
 
 	//== 本体設定 ==
-	public CaptureManager.Target target;
-	public CapPointEntry[] capPoint;
-
-	public VictoryConditions victoryType;
-	public PointType capWinType;
-	public PointType pointGainType;
-	public int interval;
-	public boolean keepCap;
-	public boolean exclusiveCap;
+	public static final DataEntry<CaptureManager.Target> Target = of(CaptureManager.Target.TEAM);
+	public static final DataEntry<VictoryConditions> VictoryType = of(VictoryConditions.Both);
+	public static final DataEntry<CapPointEntry[]> CapRegion = of(new CapPointEntry[0]);
+	public static final DataEntry<PointType> CapWinType = of(PointType.Majority);
+	public static final DataEntry<PointType> PointGainType = of(PointType.All);
+	public static final DataEntry<Integer> interval = of(0);
+	public static final DataEntry<Boolean> KeepCap = of(true);
+	public static final DataEntry<Boolean> ExclusiveCap = of(false);
 
 	enum PointType {
 		All, Majority
@@ -39,10 +40,7 @@ public class CaptureWar implements IHideEvent {
 		int pointGain;
 	}
 
-	protected MinecraftServer server;
-
 	//== セーブ ==
-	public CaptureManager cm = new CaptureManager();
 	public CountMap<String> point = new CountMap<String>();
 
 	/**1で占領*/
@@ -51,12 +49,13 @@ public class CaptureWar implements IHideEvent {
 
 	boolean isStart;
 
-	public CaptureWar(MinecraftServer server, String json) {
+	@Override
+	public void init(MinecraftServer server) {
 		//登録
-		for (CapPointEntry entry : capPoint) {
+		for (CapPointEntry entry : get(CapRegion)) {
 			entry.entry.tag = entry.tag;
-			entry.entry.target = target;
-			cm.register(entry.entry);
+			entry.entry.target = get(Target);
+			HideFaction.CapManager.register(entry.entry);
 		}
 	}
 
@@ -65,26 +64,22 @@ public class CaptureWar implements IHideEvent {
 		return null;
 	}
 
-	/**間隔(ms)*/
-	public int interval() {
-		return 500;
-	}
-
 	@SubscribeEvent()
 	public void serverTick(CapUpdateEvent event) {
 		if (!isStart)
 			return;
 		int delta = event.getDeltaTime();
+		CapPointEntry[] capPoint = get(CapRegion);
 		for (int i = 0; i < capPoint.length; i++) {
 			CapPointEntry entry = capPoint[i];
 			//更新
 
 			int max = 0;
 			String res = null;
-			for (Entry<String, Integer> pair : cm.get(entry.entry).entrySet()) {
-				if (0 < pair.getValue() && 0 < max && exclusiveCap)
+			for (Entry<String, Integer> pair : event.getMap(entry.entry).entrySet()) {
+				if (0 < pair.getValue() && 0 < max && get(ExclusiveCap))
 					res = null;
-				if (max < pair.getValue() && (!exclusiveCap || max == 0)) {
+				if (max < pair.getValue() && (!get(ExclusiveCap) || max == 0)) {
 					max = pair.getValue();
 					res = pair.getKey();
 				} else if (max == pair.getValue()) {
@@ -117,7 +112,7 @@ public class CaptureWar implements IHideEvent {
 				if (capCurrent[i] == null) {
 					if (0 < capState[i])
 						capState[i] -= delta / (float) entry.neutralizeTime;
-				} else if (!keepCap) {
+				} else if (!get(KeepCap)) {
 					capState[i] -= delta / (float) entry.neutralizeTime;
 					if (capState[i] <= 0)
 						capCurrent[i] = null;
@@ -127,38 +122,44 @@ public class CaptureWar implements IHideEvent {
 		}
 	}
 
+	@Override
 	public void start() {
 
 	}
 
 	transient private CountMap<String> countCash = new CountMap();
 
+	@Override
 	public void update() {
-		if (victoryType != VictoryConditions.LastCap) {
+		if (get(VictoryType) != VictoryConditions.LastCap) {
 			countCash.clear();
+			CapPointEntry[] capPoint = get(CapRegion);
 			for (int i = 0; i < capPoint.length; i++) {
 				CapPointEntry entry = capPoint[i];
 				if (capCurrent[i] != null)
-					if (pointGainType == PointType.All)
+					if (get(PointGainType) == PointType.All)
 						point.increment(capCurrent[i], entry.pointGain);
 					else
 						countCash.increment(capCurrent[i], entry.pointGain);
 			}
-			if (pointGainType == PointType.Majority) {
+			if (get(PointGainType) == PointType.Majority) {
 				Entry<String, Integer> big = countCash.biggest();
 				point.increment(big.getKey(), big.getValue());
 			}
 		}
 	}
 
+	@Override
 	public void end() {
 
 	}
 
+	@Override
 	public void load(String json) {
 
 	}
 
+	@Override
 	public String save() {
 		return null;
 	}

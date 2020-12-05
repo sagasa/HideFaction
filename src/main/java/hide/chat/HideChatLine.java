@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import hide.chat.HideChatManager.ChatChannel;
-import hide.core.HideUtil;
+import hide.core.util.BufUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
@@ -88,20 +88,20 @@ public class HideChatLine {
 
 	public void toBytes(ByteBuf buf) {
 		buf.writeInt(ID);
-		HideUtil.writeString(buf, Time);
-		HideUtil.writeString(buf, Channel.toString());
-		HideUtil.writeString(buf, ChannelName);
-		HideUtil.writeString(buf, Sender);
-		HideUtil.writeString(buf, getMsgJson());
+		BufUtil.writeString(buf, Time);
+		BufUtil.writeString(buf, Channel.toString());
+		BufUtil.writeString(buf, ChannelName);
+		BufUtil.writeString(buf, Sender);
+		BufUtil.writeString(buf, getMsgJson());
 	}
 
 	public void fromBytes(ByteBuf buf) {
 		ID = buf.readInt();
-		Time = HideUtil.readString(buf);
-		Channel = ChatChannel.valueOf(HideUtil.readString(buf));
-		ChannelName = HideUtil.readString(buf);
-		Sender = HideUtil.readString(buf);
-		msgJson = HideUtil.readString(buf);
+		Time = BufUtil.readString(buf);
+		Channel = ChatChannel.valueOf(BufUtil.readString(buf));
+		ChannelName = BufUtil.readString(buf);
+		Sender = BufUtil.readString(buf);
+		msgJson = BufUtil.readString(buf);
 	}
 
 	@Override

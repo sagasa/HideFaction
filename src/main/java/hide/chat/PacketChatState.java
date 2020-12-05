@@ -12,8 +12,8 @@ import hide.chat.HideChatManager.ServerChatData;
 import hide.core.FactionUtil;
 import hide.core.HideFaction;
 import hide.core.HidePlayerDataManager;
-import hide.core.HideUtil;
 import hide.core.gui.GuiHideNewChat;
+import hide.core.util.BufUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -60,11 +60,11 @@ public class PacketChatState implements IMessage, IMessageHandler<PacketChatStat
 			buf.writeByte(channel_set.size());
 			for (Pair<ChatChannel, String> pair : channel_set) {
 				buf.writeByte(pair.getLeft().getIndex());
-				HideUtil.writeString(buf, pair.getRight());
+				BufUtil.writeString(buf, pair.getRight());
 			}
 		} else if (mode == CHANNEL_SEND) {
 			buf.writeByte(channel.getLeft().getIndex());
-			HideUtil.writeString(buf, channel.getRight());
+			BufUtil.writeString(buf, channel.getRight());
 		}
 	}
 
@@ -75,10 +75,10 @@ public class PacketChatState implements IMessage, IMessageHandler<PacketChatStat
 			channel_set = new ArrayList<>();
 			int size = buf.readByte();
 			for (int i = 0; i < size; i++) {
-				channel_set.add(new ImmutablePair<>(ChatChannel.values()[buf.readByte()], HideUtil.readString(buf)));
+				channel_set.add(new ImmutablePair<>(ChatChannel.values()[buf.readByte()], BufUtil.readString(buf)));
 			}
 		} else if (mode == CHANNEL_SEND) {
-			channel = new ImmutablePair<>(ChatChannel.values()[buf.readByte()], HideUtil.readString(buf));
+			channel = new ImmutablePair<>(ChatChannel.values()[buf.readByte()], BufUtil.readString(buf));
 		}
 	}
 

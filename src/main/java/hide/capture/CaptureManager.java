@@ -20,30 +20,31 @@ public class CaptureManager {
 	protected Map<CapEntry, CountMap<String>> capState = new HashMap<>();
 	protected MinecraftServer server;
 
-	public CaptureManager(MinecraftServer server) {
+	public CaptureManager(MinecraftServer server,int interval) {
 		this.server = server;
-	}
-
-	FixedUpdater update = new FixedUpdater((delta) -> {
-		//初期化
-		capState.values().forEach(state -> state.clear());
-		//プレイヤーを走査
-		for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
-			Iterator<RegionRect> itr = RegionHolder.getManager(player.dimension, Side.SERVER).getTagRegion(player.getPosition()).iterator();
-			//レギオンを走査
-			while (itr.hasNext()) {
-				String[] tags = itr.next().getTag();
-				//エントリを走査
-				for (CapEntry entry : capState.keySet()) {
-					if (ArrayUtils.contains(tags, entry.tag)) {
-						//キーを作ってインクリメント
-						capState.get(entry).increment(entry.target.getKey(player));
+		update = new FixedUpdater((delta) -> {
+			//初期化
+			capState.values().forEach(state -> state.clear());
+			//プレイヤーを走査
+			for (EntityPlayerMP player : server.getPlayerList().getPlayers()) {
+				Iterator<RegionRect> itr = RegionHolder.getManager(player.dimension, Side.SERVER).getTagRegion(player.getPosition()).iterator();
+				//レギオンを走査
+				while (itr.hasNext()) {
+					String[] tags = itr.next().getTag();
+					//エントリを走査
+					for (CapEntry entry : capState.keySet()) {
+						if (ArrayUtils.contains(tags, entry.tag)) {
+							//キーを作ってインクリメント
+							capState.get(entry).increment(entry.target.getKey(player));
+						}
 					}
 				}
 			}
-		}
-		MinecraftForge.EVENT_BUS.post(new CapUpdateEvent(delta, this));
-	}, 500);
+			MinecraftForge.EVENT_BUS.post(new CapUpdateEvent(delta, this));
+		}, interval);
+	}
+
+	FixedUpdater update;
 
 	public void update() {
 		update.run();

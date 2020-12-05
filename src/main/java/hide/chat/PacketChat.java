@@ -14,8 +14,8 @@ import com.google.common.collect.ImmutableSet;
 import hide.chat.HideChatManager.ChatChannel;
 import hide.core.HideFaction;
 import hide.core.HideFactionDB;
-import hide.core.HideUtil;
 import hide.core.gui.GuiHideNewChat;
+import hide.core.util.BufUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -113,7 +113,7 @@ public class PacketChat implements IMessage, IMessageHandler<PacketChat, IMessag
 			buf.writeByte(channel.size());
 			for (Pair<ChatChannel, String> pair : channel) {
 				buf.writeByte(pair.getLeft().getIndex());
-				HideUtil.writeString(buf, pair.getRight());
+				BufUtil.writeString(buf, pair.getRight());
 			}
 		}
 	}
@@ -141,7 +141,7 @@ public class PacketChat implements IMessage, IMessageHandler<PacketChat, IMessag
 			channel = new ArrayList<>();
 			int size = buf.readByte();
 			for (int i = 0; i < size; i++) {
-				channel.add(new ImmutablePair<>(ChatChannel.values()[buf.readByte()], HideUtil.readString(buf)));
+				channel.add(new ImmutablePair<>(ChatChannel.values()[buf.readByte()], BufUtil.readString(buf)));
 			}
 		}
 	}

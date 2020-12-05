@@ -16,6 +16,7 @@ import hide.core.gui.FactionGUIHandler.HideGuiProvider;
 import hide.core.gui.GuiHideChat;
 import hide.core.gui.GuiHideNewChat;
 import hide.core.network.PacketSimpleCmd;
+import hide.event.CaptureWar;
 import hide.faction.CommandFaction;
 import hide.faction.data.FactionData;
 import hide.faction.gui.FactionContainer;
@@ -107,6 +108,7 @@ public class HideFaction {
 		}
 	}
 
+
 	@EventHandler
 	public void construct(FMLConstructionEvent event) {
 		MinecraftForge.EVENT_BUS.register(this);
@@ -125,20 +127,28 @@ public class HideFaction {
 	@EventHandler
 	public void serverStart(FMLServerStartingEvent event) throws IOException {
 		HideFactionDB.start();
-		event.getServer().getCommandManager().executeCommand(event.getServer(), "/errCommand");
 		//		ICommandSender icommandsender = CommandSenderWrapper.create(sender).withEntity(entity, new Vec3d(d0, d1, d2)).withSendCommandFeedback(server.worlds[0].getGameRules().getBoolean("commandBlockOutput"));
+
+		CaptureWar capWar = new CaptureWar();
+
+
+		System.out.println(new CaptureWar().toJson());;
+
 
 		event.registerServerCommand(new CommandFaction());
 		event.registerServerCommand(new RegionCommand());
 		event.registerServerCommand(new CommandChat());
 		ScheduleManager.start(event.getServer(), 1603837200000l);
-		CaptureManager cm = new CaptureManager(event.getServer());
+		CapManager = new CaptureManager(event.getServer(),500);
 	}
 
 	@EventHandler
 	public void serverStop(FMLServerStoppedEvent event) {
 		HideFactionDB.end();
 	}
+
+	public static CaptureManager CapManager;
+
 
 	@SubscribeEvent()
 	public void serverTick(ServerTickEvent event) {
