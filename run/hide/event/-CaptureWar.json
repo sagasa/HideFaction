@@ -1,0 +1,18 @@
+{
+  "Type": "CaptureWar",
+  "Values": {
+    "ParentName": "",
+    "Target": "TEAM",
+    "VictoryType": "Both",
+    "CapRegion": [],
+    "CapWinType": "Majority",
+    "PointGainType": "All",
+    "interval": 0,
+    "KeepCap": true,
+    "ExclusiveCap": false
+  }
+}
+//Target : PLAYER,TEAM
+//VictoryType : Point,LastCap,Both
+//CapWinType : All,Majority
+//PointGainType : All,Majority

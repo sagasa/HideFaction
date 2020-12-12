@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.Logger;
 
-import hide.capture.CaptureManager;
 import hide.chat.CommandChat;
 import hide.chat.HideChatManager;
 import hide.chat.HideChatManager.ServerChatData;
@@ -17,6 +16,8 @@ import hide.core.gui.GuiHideChat;
 import hide.core.gui.GuiHideNewChat;
 import hide.core.network.PacketSimpleCmd;
 import hide.event.CaptureWar;
+import hide.event.EventCommand;
+import hide.event.HideEventManager;
 import hide.faction.CommandFaction;
 import hide.faction.data.FactionData;
 import hide.faction.gui.FactionContainer;
@@ -28,6 +29,7 @@ import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
 import hide.region.network.PacketRegionEdit;
 import hide.schedule.ScheduleManager;
+import hide.types.base.DataBase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -109,6 +111,8 @@ public class HideFaction {
 	}
 
 
+	public static final HideEventManager EventManager = new HideEventManager();
+
 	@EventHandler
 	public void construct(FMLConstructionEvent event) {
 		MinecraftForge.EVENT_BUS.register(this);
@@ -133,13 +137,16 @@ public class HideFaction {
 
 
 		System.out.println(new CaptureWar().toJson());;
+		System.out.println(DataBase.getSample(CaptureWar.class));;
 
+		EventManager.load(event.getServer());
 
 		event.registerServerCommand(new CommandFaction());
 		event.registerServerCommand(new RegionCommand());
 		event.registerServerCommand(new CommandChat());
+		event.registerServerCommand(new EventCommand());
 		ScheduleManager.start(event.getServer(), 1603837200000l);
-		CapManager = new CaptureManager(event.getServer(),500);
+
 	}
 
 	@EventHandler
@@ -147,13 +154,14 @@ public class HideFaction {
 		HideFactionDB.end();
 	}
 
-	public static CaptureManager CapManager;
+
 
 
 	@SubscribeEvent()
 	public void serverTick(ServerTickEvent event) {
 		if (event.phase == Phase.END) {
 			ScheduleManager.update();
+			EventManager.update();
 		}
 	}
 

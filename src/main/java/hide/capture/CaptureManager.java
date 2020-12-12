@@ -108,7 +108,7 @@ public class CaptureManager {
 			return res;
 		}
 
-		public int get(String key) {
+		public int getNum(T key) {
 			if (containsKey(key))
 				return get(key);
 			return 0;

@@ -1,7 +1,15 @@
 {
   "Type": "CaptureWar",
   "Values": {
-    "DisplayName": "New Magazine No.1",
-    "ShortName": "magazine_1"
+  	"KeepCap": true,
+  	"Target": "PLAYER",
+	"CapRegion": [
+      {
+        "Type": "CapPointEntry",
+        "Values": {
+        	"Tag": "CapTag"
+        }
+      }
+    ]
   }
 }
