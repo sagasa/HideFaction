@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 
 import hide.core.HideFaction;
+import hide.faction.FactionSystem;
 import hide.region.network.PacketRegionData;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -52,7 +53,7 @@ public class RegionCommand extends CommandBase {
 				HideFaction.NETWORK.sendTo(PacketRegionData.removeOP(player.getUniqueID()), player);
 				RegionHolder.OPPlayers.remove(player.getUniqueID());
 			}  else if (args[0].equalsIgnoreCase("gui")) {
-				player.openGui(HideFaction.INSTANCE, HideFaction.FACTION_GUI_ID,
+				player.openGui(HideFaction.INSTANCE, FactionSystem.FACTION_GUI_ID,
 						sender.getEntityWorld(), 0, 0, 0);
 				// ((EntityPlayer) sender.getCommandSenderEntity())
 				// .addItemStackToInventory(new ItemStack(Block.getBlockById(7), 120));

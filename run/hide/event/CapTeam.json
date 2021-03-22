@@ -1,13 +1,12 @@
 {
   "Type": "CaptureWar",
   "Values": {
-  	"KeepCap": false,
-  	"Target": "PLAYER",
+  	"Target": "TEAM",
 	"CapRegion": [
       {
         "Type": "CapPointData",
         "Values": {
-        	"Tag": "CapTag",
+        	"Tag": "CapTag2",
           "CapTime": 3,
           "NeutralizeTime": 3
 

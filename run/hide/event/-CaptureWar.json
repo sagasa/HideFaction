@@ -4,15 +4,20 @@
     "ParentName": "",
     "Target": "TEAM",
     "VictoryType": "Both",
-    "CapRegion": [],
+    "CapRegion": [
+      {
+        "Type": "CapPointData",
+        "Values": {}
+      }
+    ],
     "CapWinType": "Majority",
     "PointGainType": "All",
-    "interval": 0,
     "KeepCap": true,
     "ExclusiveCap": false
   }
 }
-//Target : PLAYER,TEAM
-//VictoryType : Point,LastCap,Both
-//CapWinType : All,Majority
-//PointGainType : All,Majority
+//Target : Enum = [PLAYER,TEAM]
+//VictoryType : Enum = [Point,LastCap,Both]
+//CapRegion : Type = CapPointData
+//CapWinType : Enum = [All,Majority]
+//PointGainType : Enum = [All,Majority]

@@ -3,7 +3,7 @@ package hide.chat;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import hide.chat.HideChatManager.ChatChannel;
+import hide.chat.HideChatSystem.ChatChannel;
 import hide.core.util.BufUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;

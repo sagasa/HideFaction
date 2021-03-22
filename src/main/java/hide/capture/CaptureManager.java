@@ -5,12 +5,13 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 
-import org.apache.commons.lang3.ArrayUtils;
+import com.google.common.base.Strings;
 
 import hide.core.FactionUtil;
 import hide.core.FixedUpdater;
 import hide.region.RegionHolder;
 import hide.region.RegionRect;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,7 +21,7 @@ public class CaptureManager {
 	protected Map<CapEntry, CountMap<String>> capState = new HashMap<>();
 	protected MinecraftServer server;
 
-	public CaptureManager(MinecraftServer server,int interval) {
+	public CaptureManager(MinecraftServer server, int interval) {
 		this.server = server;
 		update = new FixedUpdater((delta) -> {
 			//初期化
@@ -30,16 +31,21 @@ public class CaptureManager {
 				Iterator<RegionRect> itr = RegionHolder.getManager(player.dimension, Side.SERVER).getTagRegion(player.getPosition()).iterator();
 				//レギオンを走査
 				while (itr.hasNext()) {
-					String[] tags = itr.next().getTag();
+					RegionRect rect = itr.next();
+
 					//エントリを走査
 					for (CapEntry entry : capState.keySet()) {
-						if (ArrayUtils.contains(tags, entry.tag)) {
+						//System.out.println(player.getName()+" "+ArrayUtils.toString(rect.getTag())+" "+entry.tag);
+						if (rect.haveTag(entry.tag)) {
 							//キーを作ってインクリメント
-							capState.get(entry).increment(entry.target.getKey(player));
+							String key = entry.target.getKey(player);
+							if (!Strings.isNullOrEmpty(key))
+								capState.get(entry).increment(key);
 						}
 					}
 				}
 			}
+			//System.out.println(capState);
 			MinecraftForge.EVENT_BUS.post(new CapUpdateEvent(delta, this));
 		}, interval);
 	}
@@ -65,13 +71,13 @@ public class CaptureManager {
 	public enum Target {
 		PLAYER(player -> player.getName()), TEAM(FactionUtil::getFaction);
 
-		private Target(Function<EntityPlayerMP, String> func) {
+		private Target(Function<EntityPlayer, String> func) {
 			this.func = func;
 		}
 
-		private Function<EntityPlayerMP, String> func;
+		private Function<EntityPlayer, String> func;
 
-		public String getKey(EntityPlayerMP player) {
+		public String getKey(EntityPlayer player) {
 			return func.apply(player);
 		}
 	}

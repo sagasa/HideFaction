@@ -1,6 +1,6 @@
 package hide.chat;
 
-import static hide.chat.HideChatManager.*;
+import static hide.chat.HideChatSystem.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,10 +11,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.ImmutableSet;
 
-import hide.chat.HideChatManager.ChatChannel;
+import hide.chat.HideChatSystem.ChatChannel;
+import hide.chat.gui.GuiHideNewChat;
 import hide.core.HideFaction;
-import hide.core.HideFactionDB;
-import hide.core.gui.GuiHideNewChat;
 import hide.core.util.BufUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -156,11 +155,11 @@ public class PacketChat implements IMessage, IMessageHandler<PacketChat, IMessag
 				EntityPlayerMP player = ctx.getServerHandler().player;
 				switch (msg.mode) {
 				case REQ_NEXT:
-					HideFaction.NETWORK.sendTo(chatChunkNext(HideFactionDB.getNextChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
+					HideFaction.NETWORK.sendTo(chatChunkNext(HideChatDB.getNextChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
 					System.out.println("新着 チャット送信 ");
 					break;
 				case REQ_PREV:
-					HideFaction.NETWORK.sendTo(chatChunkPrev(HideFactionDB.getPrevChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
+					HideFaction.NETWORK.sendTo(chatChunkPrev(HideChatDB.getPrevChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
 					System.out.println("過去 チャット送信 ");
 					break;
 				default:

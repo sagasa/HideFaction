@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import hide.core.HideFaction;
 import hide.core.network.PacketSimpleCmd;
-import hide.core.network.PacketSimpleCmd.Cmd;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -15,6 +14,8 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraftforge.server.command.TextComponentHelper;
 
 public class CommandFaction extends CommandBase {
+
+
 
 	@Override
 	public int getRequiredPermissionLevel() {
@@ -48,7 +49,7 @@ public class CommandFaction extends CommandBase {
 		// System.out.println(sender.getEntityWorld().getScoreboard().getPlayersTeam(sender.getName()).getFriendlyFlags());
 		System.out.println(sender.getEntityWorld().getSaveHandler().getWorldDirectory().getAbsolutePath());
 		if (sender.getCommandSenderEntity() instanceof EntityPlayer) {
-			HideFaction.NETWORK.sendTo(new PacketSimpleCmd(Cmd.OpenRegionGUI), (EntityPlayerMP) sender.getCommandSenderEntity());
+			HideFaction.NETWORK.sendTo(new PacketSimpleCmd(FactionSystem.OpenFactionGUI), (EntityPlayerMP) sender.getCommandSenderEntity());
 		}
 	}
 }

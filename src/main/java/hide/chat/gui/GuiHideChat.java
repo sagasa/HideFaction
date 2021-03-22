@@ -1,4 +1,4 @@
-package hide.core.gui;
+package hide.chat.gui;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.google.common.collect.ImmutableSet;
 
-import hide.chat.HideChatManager.ChatChannel;
+import hide.chat.HideChatSystem.ChatChannel;
 import hide.chat.PacketChatState;
 import hide.core.FactionUtil;
 import hide.core.HideFaction;

@@ -6,11 +6,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,7 +78,7 @@ public class RegionHolder {
 
 	/** レジストリに登録 */
 	public void registerRegionMap() {
-		System.out.println("registr " + RegionList);
+		System.out.println("registr " + RegionList.size() + " region");
 		//通知
 		listenerList.forEach(r -> r.run());
 		RegionList.forEach(rg -> rg.checkValue());
@@ -108,13 +110,13 @@ public class RegionHolder {
 	}
 
 	/**タグ全一致のみ*/
-	public static Stream<RegionRect> andFilter(Stream<RegionRect> stream, String... tag) {
-		return stream.filter(rg -> andSerch(tag, rg.getTag()));
+	public static Stream<RegionRect> andFilter(Stream<RegionRect> stream, Collection<String> tag) {
+		return stream.filter(rg -> andSerch(tag, rg));
 	}
 
 	/**タグのどれかが一致*/
-	public static Stream<RegionRect> orFilter(Stream<RegionRect> stream, String... tag) {
-		return stream.filter(rg -> orSerch(tag, rg.getTag()));
+	public static Stream<RegionRect> orFilter(Stream<RegionRect> stream, Collection<String> tag) {
+		return stream.filter(rg -> orSerch(tag, rg));
 	}
 
 	/** チャンク-レギオンリストのMap */
@@ -139,47 +141,36 @@ public class RegionHolder {
 		}
 
 		/**タグ全一致のみ*/
-		RegionRect getRegionAnd(BlockPos pos, String... tag) {
+		RegionRect getRegionAnd(BlockPos pos, Collection<String> tag) {
 			ChunkPos cPos = new ChunkPos(pos);
 			if (!chunkMap.containsKey(cPos))
 				return null;
-			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos) && (tag == null || andSerch(tag, rg.getTag())))
+			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos) && (tag == null || andSerch(tag, rg)))
 					.findFirst().orElse(null);
 		}
 
 		/**タグのどれかが一致*/
-		RegionRect getRegionOr(BlockPos pos, String... tag) {
+		RegionRect getRegionOr(BlockPos pos, Collection<String> tag) {
 			ChunkPos cPos = new ChunkPos(pos);
 			if (!chunkMap.containsKey(cPos))
 				return null;
-			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos) && (tag == null || orSerch(tag, rg.getTag())))
+			return chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos) && (tag == null || orSerch(tag, rg)))
 					.findFirst().orElse(null);
 		}
 	}
 
-	private static boolean andSerch(String[] input, String[] target) {
+	private static boolean andSerch(Collection<String> input, RegionRect target) {
 		for (String in : input) {
-			boolean flag = true;
-			tLoop: for (String tar : target) {
-				if (tar.equals(in)) {
-					flag = false;
-					break tLoop;
-				}
-			}
-			//見つからなかった場合false
-			if (flag)
+			if (!target.haveTag(in))
 				return false;
 		}
 		return true;
 	}
 
-	private static boolean orSerch(String[] input, String[] target) {
+	private static boolean orSerch(Collection<String> input, RegionRect target) {
 		for (String in : input) {
-			for (String tar : target) {
-				if (tar.equals(in)) {
-					return true;
-				}
-			}
+			if (target.haveTag(in))
+				return true;
 		}
 		return false;
 	}
@@ -203,11 +194,14 @@ public class RegionHolder {
 			// player.world.getScoreboard().getTeam(player.getName()).getName();
 			EnumPermissionState state = DefaultPermission.getOrDefault(permission, EnumPermissionState.ALLOW);
 			ChunkPos cPos = new ChunkPos(pos);
-			if (chunkMap.containsKey(cPos))
-				for (RegionRect rg : chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos))
-						.toArray(RegionRect[]::new)) {
-					state = state.returnIfNone(rg.checkPermission(permission, player));
+			if (chunkMap.containsKey(cPos)) {
+				Iterator<RegionRect> itr = chunkMap.get(cPos).stream().filter(rg -> rg.contain(pos)).iterator();
+				while (itr.hasNext()) {
+					state = state.returnIfNone(itr.next().checkPermission(permission, player));
 				}
+
+			}
+
 			return state != EnumPermissionState.DENY;
 		}
 	}

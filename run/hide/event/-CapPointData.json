@@ -1,0 +1,11 @@
+{
+  "Type": "CapPointData",
+  "Values": {
+    "Tag": "regionTag",
+    "Name": "regionName",
+    "IncreaseFactor": 1.0,
+    "CapTime": 1.0,
+    "NeutralizeTime": 1.0,
+    "PointGain": 1
+  }
+}

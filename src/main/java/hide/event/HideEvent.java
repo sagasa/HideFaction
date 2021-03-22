@@ -1,6 +1,7 @@
 package hide.event;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -8,9 +9,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import hide.core.HideFaction;
 import hide.types.base.DataBase;
+import io.netty.buffer.ByteBuf;
 
 public abstract class HideEvent extends DataBase {
+
+	protected Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+	/**読み込み時のindex*/
+	transient byte index;
 
 	/** 親の登録名 String */
 	public static final DataEntry<String> ParentName = of("");
@@ -40,7 +51,11 @@ public abstract class HideEvent extends DataBase {
 		return name;
 	}
 
-	abstract void init(HideEventManager manager);
+	abstract void initServer(HideEventSystem manager);
+
+	void initClient() {
+
+	};
 
 	abstract void start();
 
@@ -48,10 +63,31 @@ public abstract class HideEvent extends DataBase {
 
 	abstract void end();
 
-	abstract void load(String json);
+	abstract void fromSave(String json);
 
-	abstract String save();
+	abstract String toSave();
 
+	abstract void fromServer(ByteBuf buf);
+
+	abstract void toBytes(ByteBuf buf);
+
+	protected void toClient() {
+		HideFaction.NETWORK.sendToAll(new HideEventSystem.NetMsg(this));
+	}
+
+	String getSaveName() {
+		return getName()+".json";
+	}
+
+	protected void saveState() {
+		File file = new File(HideEventSystem.INSTANCE.SaveDir, getSaveName());
+		try {
+			file.createNewFile();
+			Files.write(file.toPath(), toSave().getBytes(StandardCharsets.UTF_8));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	/***/
 
 }

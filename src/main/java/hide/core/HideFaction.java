@@ -1,53 +1,23 @@
 package hide.core;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.logging.log4j.Logger;
 
-import hide.chat.CommandChat;
-import hide.chat.HideChatManager;
-import hide.chat.HideChatManager.ServerChatData;
-import hide.chat.PacketChat;
-import hide.chat.PacketChatState;
-import hide.core.asm.HideCoreHook;
+import hide.chat.HideChatSystem;
 import hide.core.gui.FactionGUIHandler;
-import hide.core.gui.FactionGUIHandler.HideGuiProvider;
-import hide.core.gui.GuiHideChat;
-import hide.core.gui.GuiHideNewChat;
+import hide.core.network.DataSync;
+import hide.core.network.DataSync.SyncMsg;
 import hide.core.network.PacketSimpleCmd;
-import hide.event.CaptureWar;
-import hide.event.EventCommand;
-import hide.event.HideEventManager;
-import hide.faction.CommandFaction;
-import hide.faction.data.FactionData;
-import hide.faction.gui.FactionContainer;
-import hide.faction.gui.FactionGuiContainer;
-import hide.region.ItemRegionEdit;
-import hide.region.PermissionManager;
-import hide.region.RegionCommand;
-import hide.region.gui.RegionEditor;
-import hide.region.network.PacketRegionData;
-import hide.region.network.PacketRegionEdit;
+import hide.event.HideEventSystem;
+import hide.faction.FactionSystem;
+import hide.region.RegionSystem;
+import hide.resource.HideLootSystem;
 import hide.schedule.ScheduleManager;
-import hide.types.base.DataBase;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiChat;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.world.World;
-import net.minecraftforge.client.event.GuiOpenEvent;
-import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
-import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.ServerChatEvent;
-import net.minecraftforge.event.entity.PlaySoundAtEntityEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLConstructionEvent;
@@ -57,13 +27,11 @@ import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
+import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 @Mod(modid = HideFaction.MODID, name = HideFaction.NAME)
 public class HideFaction {
@@ -81,6 +49,26 @@ public class HideFaction {
 	}
 
 	@EventHandler
+	public void construct(FMLConstructionEvent event) {
+		//サブシステム登録
+		registerSubSystem(event, new HideChatSystem());
+		registerSubSystem(event, new RegionSystem());
+		registerSubSystem(event, new FactionSystem());
+		registerSubSystem(event, new HideLootSystem());
+		registerSubSystem(event, HideEventSystem.INSTANCE);
+
+		MinecraftForge.EVENT_BUS.register(this);
+	}
+
+	private List<IHideSubSystem> subSystems = new ArrayList<>();
+
+	private void registerSubSystem(FMLConstructionEvent event, IHideSubSystem system) {
+		MinecraftForge.EVENT_BUS.register(system);
+		system.init(event.getSide());
+		subSystems.add(system);
+	}
+
+	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		log = event.getModLog();
 		// ネットワーク系
@@ -88,35 +76,10 @@ public class HideFaction {
 		 * IMesssageHandlerクラスとMessageクラスの登録。 第三引数：MessageクラスのMOD内での登録ID。256個登録できる
 		 * 第四引数：送り先指定。クライアントかサーバーか、Side.CLIENT Side.SERVER
 		 */
-		NETWORK.registerMessage(PacketSimpleCmd.class, PacketSimpleCmd.class, 0, Side.SERVER);
-		NETWORK.registerMessage(PacketSimpleCmd.class, PacketSimpleCmd.class, 1, Side.CLIENT);
+		registerNetMsg(PacketSimpleCmd.class, PacketSimpleCmd.class, Side.SERVER);
+		registerNetMsg(PacketSimpleCmd.class, PacketSimpleCmd.class, Side.CLIENT);
 
-		NETWORK.registerMessage(PacketRegionData.class, PacketRegionData.class, 3, Side.CLIENT);
-
-		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 4, Side.SERVER);
-		NETWORK.registerMessage(PacketRegionEdit.class, PacketRegionEdit.class, 5, Side.CLIENT);
-
-		NETWORK.registerMessage(PacketChat.class, PacketChat.class, 6, Side.SERVER);
-		NETWORK.registerMessage(PacketChat.class, PacketChat.class, 7, Side.CLIENT);
-
-		NETWORK.registerMessage(PacketChatState.class, PacketChatState.class, 8, Side.SERVER);
-		NETWORK.registerMessage(PacketChatState.class, PacketChatState.class, 9, Side.CLIENT);
-
-		HidePlayerDataManager.register(ServerChatData.class, Side.SERVER);
-		if (event.getSide() == Side.CLIENT) {
-			Minecraft.getMinecraft().getFramebuffer().enableStencil();
-			HideCoreHook.GuiNewChat = GuiHideNewChat::new;
-
-		}
-	}
-
-
-	public static final HideEventManager EventManager = new HideEventManager();
-
-	@EventHandler
-	public void construct(FMLConstructionEvent event) {
-		MinecraftForge.EVENT_BUS.register(this);
-		MinecraftForge.EVENT_BUS.register(new PermissionManager());
+		registerNetMsg(DataSync.class, SyncMsg.class, Side.CLIENT);
 	}
 
 	@EventHandler
@@ -125,116 +88,29 @@ public class HideFaction {
 		ScheduleManager.load();
 		// some example code
 		log.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
-
 	}
 
 	@EventHandler
-	public void serverStart(FMLServerStartingEvent event) throws IOException {
-		HideFactionDB.start();
-		//		ICommandSender icommandsender = CommandSenderWrapper.create(sender).withEntity(entity, new Vec3d(d0, d1, d2)).withSendCommandFeedback(server.worlds[0].getGameRules().getBoolean("commandBlockOutput"));
-
-		CaptureWar capWar = new CaptureWar();
-
-
-		System.out.println(new CaptureWar().toJson());;
-		System.out.println(DataBase.getSample(CaptureWar.class));;
-
-		EventManager.load(event.getServer());
-
-		event.registerServerCommand(new CommandFaction());
-		event.registerServerCommand(new RegionCommand());
-		event.registerServerCommand(new CommandChat());
-		event.registerServerCommand(new EventCommand());
-		ScheduleManager.start(event.getServer(), 1603837200000l);
-
+	public void serverStart(FMLServerStartingEvent event) {
+		subSystems.forEach(sys -> sys.serverStart(event));
 	}
 
 	@EventHandler
 	public void serverStop(FMLServerStoppedEvent event) {
-		HideFactionDB.end();
-	}
-
-
-
-
-	@SubscribeEvent()
-	public void serverTick(ServerTickEvent event) {
-		if (event.phase == Phase.END) {
-			ScheduleManager.update();
-			EventManager.update();
-		}
-	}
-
-	@SubscribeEvent()
-	public void onEvent(ServerChatEvent event) {
-		HideChatManager.onChat(event);
+		subSystems.forEach(sys -> sys.serverStop(event));
 	}
 
 	@SubscribeEvent()
 	public void onEvent(PlayerLoggedInEvent event) {
-		HideChatManager.onLogin((EntityPlayerMP) event.player);
+		DataSync.update((EntityPlayerMP) event.player);
 	}
 
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent()
-	public void onEvent(PlaySoundAtEntityEvent event) {
-		if (event.getEntity() instanceof EntityPlayer) {
+	/**Mod内ネットID*/
+	private static int netID;
 
-		}
+	/**自動でIDを割り振る登録ラッパー*/
+	public static <REQ extends IMessage, REPLY extends IMessage> void registerNetMsg(Class<? extends IMessageHandler<REQ, REPLY>> messageHandler, Class<REQ> requestMessageType, Side side) {
+		NETWORK.registerMessage(messageHandler, requestMessageType, netID, side);
+		netID++;
 	}
-
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent()
-	public void onEvent(GuiOpenEvent event) {
-		//System.out.println(event.getGui());
-		if (event.getGui() instanceof GuiChat) {
-			event.setGui(new GuiHideChat(((GuiChat) event.getGui()).defaultInputFieldText));
-		}
-	}
-
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent()
-	public void onEvent(RenderGameOverlayEvent event) {
-		if (event.isCancelable() && event.getType() == ElementType.PLAYER_LIST) {
-
-		}
-	}
-
-	@SideOnly(Side.CLIENT)
-	@SubscribeEvent()
-	public void onEvent(RenderWorldLastEvent event) {
-		//RegionManager.getManager(Minecraft.getMinecraft().world).RegionList
-		//		.forEach(rg -> rg.drawRegionRect(true,event.getPartialTicks(),0.8f,1f,0));
-		RegionEditor.draw(event.getPartialTicks());
-		// GlStateManager.enableDepth();
-	}
-
-	@ObjectHolder(MODID)
-	public static class ITEMS {
-		public static final Item edit_region = null;
-	}
-
-	@SubscribeEvent
-	public void registerItems(RegistryEvent.Register<Item> event) {
-		event.getRegistry().registerAll(new ItemRegionEdit());
-	}
-
-	@SubscribeEvent
-	public void registerModels(ModelRegistryEvent event) {
-		ModelLoader.setCustomModelResourceLocation(ITEMS.edit_region, 0, new ModelResourceLocation(ITEMS.edit_region.getRegistryName(), "inventory"));
-	}
-
-	static FactionData data = new FactionData();
-	public static int FACTION_GUI_ID = FactionGUIHandler.register(new HideGuiProvider() {
-
-		@Override
-		public Object getServerGuiElement(EntityPlayer player, World world, int x, int y, int z) {
-			return new FactionContainer(player, data);
-		}
-
-		@Override
-		public Object getClientGuiElement(EntityPlayer player, World world, int x, int y, int z) {
-			return new FactionGuiContainer(player, data);
-		}
-	});
 }

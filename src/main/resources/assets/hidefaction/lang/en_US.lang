@@ -4,3 +4,10 @@ commands.chat.reload.success=reload %s's chat
 commands.region.usage=/faction <gui|op|deop> [player]
 commands.region.op.success=op %s
 commands.region.deop.success=deop %s
+
+hide.gui.capture.start=%s capturing by %s
+hide.gui.capture.success=%s captured by %s
+
+hide.gui.stop=Stop
+hide.gui.cap=Taken
+hide.gui.recap=Regaining

@@ -7,12 +7,12 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
-import hide.chat.HideChatManager.ChatChannel;
-import hide.chat.HideChatManager.ServerChatData;
+import hide.chat.HideChatSystem.ChatChannel;
+import hide.chat.HideChatSystem.ServerChatData;
+import hide.chat.gui.GuiHideNewChat;
 import hide.core.FactionUtil;
 import hide.core.HideFaction;
 import hide.core.HidePlayerDataManager;
-import hide.core.gui.GuiHideNewChat;
 import hide.core.util.BufUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;

@@ -22,7 +22,8 @@ public class ScheduleManager {
 	public static void load() {
 		File dir = new File(Loader.instance().getConfigDir().getParent(), "schedule");
 		dir.mkdirs();
-		for (File file : dir.listFiles(file -> file.isFile() && file.getName().endsWith(".json"))) {
+		for (File file : dir.listFiles(file -> file.isFile() && file.getName().endsWith(".json")&&!file.getName().startsWith("-"))) {
+			System.out.println("file "+file.getName()+" "+!file.getName().startsWith("-"));
 			try {
 				list.add(Schedule.gson.fromJson(new String(Files.readAllBytes(Paths.get(file.getPath())), StandardCharsets.UTF_8), Schedule.class));
 			} catch (IOException e) {

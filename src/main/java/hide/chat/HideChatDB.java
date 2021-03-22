@@ -1,6 +1,6 @@
-package hide.core;
+package hide.chat;
 
-import static hide.chat.HideChatManager.*;
+import static hide.chat.HideChatSystem.*;
 
 import java.io.File;
 import java.sql.Connection;
@@ -16,13 +16,12 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.google.common.collect.Lists;
 
-import hide.chat.HideChatLine;
-import hide.chat.HideChatManager.ChatChannel;
+import hide.core.FactionUtil;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraftforge.fml.common.Loader;
 
-public class HideFactionDB {
+public class HideChatDB {
 
 	private static Connection conn;
 

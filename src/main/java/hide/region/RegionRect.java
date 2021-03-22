@@ -1,8 +1,10 @@
 package hide.region;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -50,6 +52,8 @@ public class RegionRect implements IMessage {
 	@SerializedName("Tag")
 	private String[] _tag = ArrayUtils.EMPTY_STRING_ARRAY;
 
+	private transient Set<String> _tag_set = new HashSet<>();
+
 	/** 2点を設定 チェック掛けるから制約はなし */
 	public RegionRect setPos(Vec3i start, Vec3i end) {
 		_start = start;
@@ -70,13 +74,28 @@ public class RegionRect implements IMessage {
 		return 0 < _tag.length;
 	}
 
-	public RegionRect setTag(String... name) {
-		_tag = name;
+	private void initTagSet() {
+		_tag_set.clear();
+		for (String string : _tag) {
+			_tag_set.add(string);
+		}
+	}
+
+	public RegionRect setTag(String[] tag) {
+		_tag = tag;
+		initTagSet();
 		return this;
 	}
 
 	public String[] getTag() {
 		return _tag;
+	}
+
+	public boolean haveTag(String tag) {
+		if(_tag_set.size()!=_tag.length) {
+			initTagSet();
+		}
+		return _tag_set.contains(tag);
 	}
 
 	public RegionRect setRuleName(String name) {
@@ -132,8 +151,8 @@ public class RegionRect implements IMessage {
 	public void register(ChunkRegingMap chunkMap) {
 		int maxX = _end.getX() >> 4;
 		int minX = _start.getX() >> 4;
-		int maxZ = _end.getX() >> 4;
-		int minZ = _start.getX() >> 4;
+		int maxZ = _end.getZ() >> 4;
+		int minZ = _start.getZ() >> 4;
 		for (int x = minX; x <= maxX; x++) {
 			for (int z = minZ; z <= maxZ; z++) {
 				chunkMap.addToMap(new ChunkPos(x, z), this);
@@ -315,9 +334,11 @@ public class RegionRect implements IMessage {
 		_ruleName = ByteBufUtils.readUTF8String(buf);
 		int size = buf.readByte();
 		if (0 < size) {
-			_tag = new String[size];
-			for (int i = 0; i < _tag.length; i++)
-				_tag[i] = ByteBufUtils.readUTF8String(buf);
+			String[] tag = new String[size];
+			for (int i = 0; i < tag.length; i++)
+				tag[i] = ByteBufUtils.readUTF8String(buf);
+
+			setTag(tag);
 		}
 		checkValue();
 	}

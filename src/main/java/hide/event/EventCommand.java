@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 
-import hide.core.HideFaction;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -40,20 +39,20 @@ public class EventCommand extends CommandBase {
 			throw new WrongUsageException("commands.region.usage", new Object[0]);
 		} else {
 			if (args[0].equalsIgnoreCase("start")) {
-				if (HideFaction.EventManager.eventStart(args[1]))
+				if (HideEventSystem.INSTANCE.eventStart(args[1]))
 					;
 				else
 					;
 				sendCmdRes(sender, "");
 			} else if (args[0].equalsIgnoreCase("update")) {
 				sendCmdRes(sender, "");
-				if (HideFaction.EventManager.eventUpdate(args[1]))
+				if (HideEventSystem.INSTANCE.eventUpdate(args[1]))
 					;
 				else
 					;
 			} else if (args[0].equalsIgnoreCase("end")) {
 				sendCmdRes(sender, "");
-				if (HideFaction.EventManager.eventEnd(args[1]))
+				if (HideEventSystem.INSTANCE.eventEnd(args[1]))
 					;
 				else
 					;

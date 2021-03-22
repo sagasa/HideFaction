@@ -3,6 +3,7 @@ package hide.region.gui;
 import hide.core.HideFaction;
 import hide.region.RegionHolder;
 import hide.region.RegionRect;
+import hide.region.RegionSystem;
 import hide.region.network.PacketRegionEdit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
@@ -25,7 +26,7 @@ public class RegionEditor {
 	public static void update() {
 		Minecraft mc = Minecraft.getMinecraft();
 
-		if (mc.player == null || Minecraft.getMinecraft().currentScreen != null || mc.player.getHeldItemMainhand().getItem() != HideFaction.ITEMS.edit_region)
+		if (mc.player == null || Minecraft.getMinecraft().currentScreen != null || mc.player.getHeldItemMainhand().getItem() != RegionSystem.edit_region)
 			return;
 
 		boolean flag = Minecraft.getMinecraft().player.isSneaking();

@@ -1,6 +1,6 @@
-package hide.core.gui;
+package hide.chat.gui;
 
-import static hide.chat.HideChatManager.*;
+import static hide.chat.HideChatSystem.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,10 +14,10 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import com.google.common.collect.ImmutableSet;
 
 import hide.chat.HideChatLine;
-import hide.chat.HideChatManager.ChatChannel;
+import hide.chat.HideChatSystem.ChatChannel;
+import hide.chat.gui.ChatScopeHolder.ChatChunk.ChatIterator;
 import hide.chat.PacketChat;
 import hide.core.HideFaction;
-import hide.core.gui.ChatScopeHolder.ChatChunk.ChatIterator;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.network.play.server.SPacketChat;
 
