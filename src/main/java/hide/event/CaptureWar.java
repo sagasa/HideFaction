@@ -8,10 +8,11 @@ import hide.capture.CaptureManager.CapEntry;
 import hide.capture.CaptureManager.CountMap;
 import hide.core.util.BufUtil;
 import hide.event.gui.GuiCapProgress;
+import hide.event.gui.GuiCapState;
 import hide.types.base.DataBase;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -101,7 +102,8 @@ public class CaptureWar extends HideEvent {
 
 	@Override
 	public void initServer(HideEventSystem manager) {
-		save = new CapWarSave();
+		if (save == null)
+			save = new CapWarSave();
 		//登録
 		CapPointData[] array = get(CapRegion);
 		for (CapPointData entry : array) {
@@ -114,12 +116,19 @@ public class CaptureWar extends HideEvent {
 	@Override
 	void initClient() {
 		save = new CapWarSave();
+		gui = new GuiCapState(this);
+		System.out.println("Hi " + gui);
 	}
 
-	@SubscribeEvent()
 	@SideOnly(Side.CLIENT)
-	public void drawGui(RenderGameOverlayEvent event) {
-		System.out.println(event.getType().getClass());
+	private GuiCapState gui;
+
+	@SideOnly(Side.CLIENT)
+	@Override
+	void drawOverlay(ScaledResolution resolution) {
+		if (gui != null) {
+			gui.draw(resolution);
+		}
 	}
 
 	@SubscribeEvent()
@@ -214,7 +223,7 @@ public class CaptureWar extends HideEvent {
 
 	@Override
 	public void start() {
-
+		System.out.println("Start event");
 	}
 
 	transient private CountMap<String> countCash = new CountMap();
@@ -227,6 +236,7 @@ public class CaptureWar extends HideEvent {
 			for (int i = 0; i < capPointData.length; i++) {
 				CapPointData entry = capPointData[i];
 				CapPoint point = save.state[i];
+				System.out.println("update  current " + point.current);
 				if (point.current != null)
 					if (get(PointGainType) == PointType.All)
 						save.point.increment(point.current, entry.get(CapPointData.PointGain));
@@ -238,11 +248,12 @@ public class CaptureWar extends HideEvent {
 				save.point.increment(big.getKey(), big.getValue());
 			}
 		}
+		System.out.println("Update event " + save.point + " " + get(VictoryType));
 	}
 
 	@Override
 	public void end() {
-
+		System.out.println("End event");
 	}
 
 	@Override
@@ -255,6 +266,7 @@ public class CaptureWar extends HideEvent {
 		return gson.toJson(save);
 	}
 
+	@SideOnly(Side.CLIENT)
 	@Override
 	public void fromServer(ByteBuf buf) {
 		int size = buf.readByte();

@@ -111,7 +111,7 @@ public class Schedule {
 				//未到達orセクション区分なし
 				if (time < entry.time || entry.mode == SectionMode.NONE)
 					continue;
-				System.out.println(entry.section+" "+entry.mode+" "+entry.time+" ");
+				System.out.println(entry.section + " " + entry.mode + " " + entry.time + " ");
 				//１日経ってないなら前回タイムでbreak
 				if (lastDate == date && entry.time < lastTime)
 					break;
@@ -166,7 +166,7 @@ public class Schedule {
 		private boolean onStart;
 		private boolean onEnd;
 
-		private static int defaultEnd = 86400000 + TimeZone.getDefault().getRawOffset();
+		private static int defaultEnd = toTime("0:00", true);
 
 		private String section;
 		private SectionMode mode = SectionMode.NONE;
@@ -178,19 +178,24 @@ public class Schedule {
 			else if (onEnd)
 				schedule.onEnd.add(new ScheduleEntry(time, cmd, mode, section));
 			else {
-				System.out.println(time + " " + interval + " " + end);
+				System.out.println(formatHMM_GMT.format(time) + " " + formatHMM_GMT.format(interval) + " " + formatHMM_GMT.format(end) + " " + cmd + " " + formatHMM_GMT.format(defaultEnd));
 				if (interval == 0) {
 					ScheduleEntry entry = new ScheduleEntry(time, cmd, mode, section);
 					schedule.entryMap.put(time, entry);
 					schedule.entryList.add(entry);
-				} else
-					for (int i = time; i < end; i += interval) {
+				} else {
+					//イベントの継続時間
+					int length = time < end ? end - time : 86400000 - time + end;
+
+					for (int i = time; i < time + length; i += interval) {
 						int fixed = i % 86400000;
 						ScheduleEntry entry = new ScheduleEntry(fixed, cmd, mode, section);
-						//System.out.println("AAAA " + time + " " + fixed + " " + end);
+						System.out.println("AAAA " + formatHMM_GMT.format(fixed) + " " + fixed + " " + formatHMM.format(fixed));
 						schedule.entryMap.put(fixed, entry);
 						schedule.entryList.add(entry);
 					}
+				}
+
 			}
 		}
 
@@ -200,8 +205,8 @@ public class Schedule {
 		}
 	}
 
-	static final SimpleDateFormat formatHMM = new SimpleDateFormat("h:mm");
-	static final SimpleDateFormat formatHMM_GMT = new SimpleDateFormat("h:mm");
+	static final SimpleDateFormat formatHMM = new SimpleDateFormat("H:mm");
+	static final SimpleDateFormat formatHMM_GMT = new SimpleDateFormat("H:mm");
 	static {
 		formatHMM_GMT.setTimeZone(TimeZone.getTimeZone("GMT"));
 	}
@@ -279,8 +284,10 @@ public class Schedule {
 				public JsonElement serialize(Schedule src, Type typeOfSrc, JsonSerializationContext context) {
 					JsonObject obj = new JsonObject();
 
-					obj.addProperty("start", PresetTime.getTime(src.startDay));
-					obj.addProperty("end", PresetTime.getTime(src.endDay));
+					if (src.startDay != 0 || src.endDay != 0) {
+						obj.addProperty("start", PresetTime.getTime(src.startDay));
+						obj.addProperty("end", PresetTime.getTime(src.endDay));
+					}
 					if (src.cycleDay != 0 && !PresetTime.inPreset(src.startDay))
 						obj.addProperty("cycle", src.cycleDay / PresetTime.DAY);
 
@@ -299,10 +306,10 @@ public class Schedule {
 					JsonArray array = obj.get("entry").getAsJsonArray();
 					Schedule schedule = new Schedule();
 					//時間読み取り
-					String start = obj.get("start").getAsString();
+					String start = obj.has("start") ? obj.get("start").getAsString() : null;
 					schedule.cycleDay = PresetTime.inPreset(start) ? PresetTime.WEEK : obj.get("cycle").getAsInt() * PresetTime.DAY;
-					schedule.startDay = PresetTime.getTime(start);
-					schedule.endDay = PresetTime.getTime(obj.get("end").getAsString());
+					schedule.startDay = start != null ? PresetTime.getTime(start) : 0;
+					schedule.endDay = start != null ? PresetTime.getTime(obj.get("end").getAsString()) : 0;
 
 					//エントリ読み取り
 					for (JsonElement element : array) {
@@ -343,13 +350,20 @@ public class Schedule {
 				public ScheduleEntryData deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
 					JsonObject obj = json.getAsJsonObject();
 					ScheduleEntryData schedule = new ScheduleEntryData();
-					String time = obj.get("time").getAsString();
-					if (time.equalsIgnoreCase("START"))
-						schedule.onStart = true;
-					else if (time.equalsIgnoreCase("END"))
-						schedule.onEnd = true;
-					else
-						schedule.time = toTime(time, true);
+
+					if (obj.has("time")) {
+						String time = obj.get("time").getAsString();
+						if (time.equalsIgnoreCase("START"))
+							schedule.onStart = true;
+						else if (time.equalsIgnoreCase("END"))
+							schedule.onEnd = true;
+						else
+							schedule.time = toTime(time, true);
+					} else {
+						schedule.time = toTime("0:00", true);
+						System.out.println("nyaaaaaaaaaaaaaaa  " + toTime("0:00", true));
+					}
+
 					if (obj.has("interval")) {
 						schedule.interval = toTime(obj.get("interval").getAsString(), false);
 						if (obj.has("end"))

@@ -14,7 +14,6 @@ import hide.event.HideEventSystem;
 import hide.faction.FactionSystem;
 import hide.region.RegionSystem;
 import hide.resource.HideLootSystem;
-import hide.schedule.ScheduleManager;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraftforge.common.MinecraftForge;
@@ -85,7 +84,6 @@ public class HideFaction {
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
 		NetworkRegistry.INSTANCE.registerGuiHandler(this, new FactionGUIHandler());
-		ScheduleManager.load();
 		// some example code
 		log.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
 	}

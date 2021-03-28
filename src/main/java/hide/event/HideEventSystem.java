@@ -22,6 +22,8 @@ import hide.types.base.DataBase;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
@@ -33,6 +35,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class HideEventSystem implements IHideSubSystem {
 
@@ -78,8 +81,15 @@ public class HideEventSystem implements IHideSubSystem {
 		writeSample(CaptureWar.class);
 		writeSample(CapPointData.class);
 		HideFaction.registerNetMsg(NetHandler.class, NetMsg.class, side);
-		System.out.println("init AAAAAAAAAAAA");
+		ScheduleManager.load();
+	}
 
+	@SubscribeEvent()
+	@SideOnly(Side.CLIENT)
+	public void drawGui(RenderGameOverlayEvent event) {
+		if (event.getType() == ElementType.HOTBAR) {
+			HideEventSync.ClientData.forEach(e -> e.drawOverlay(event.getResolution()));
+		}
 	}
 
 	@SubscribeEvent()
@@ -94,13 +104,14 @@ public class HideEventSystem implements IHideSubSystem {
 
 	@Override
 	public void serverStart(FMLServerStartingEvent event) {
+
 		event.registerServerCommand(new EventCommand());
-		ScheduleManager.start(event.getServer(), 1603837200000l);
 		this.server = event.getServer();
 		SaveDir = server.getActiveAnvilConverter().getFile(server.getFolderName(), "/hide/event/");
 		SaveDir.mkdirs();
 		CapManager = new CaptureManager(server, 500);
 		load();
+		ScheduleManager.start(event.getServer(), 1603837200000l);
 	}
 
 	public void load() {

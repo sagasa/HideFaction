@@ -15,6 +15,9 @@ import com.google.gson.GsonBuilder;
 import hide.core.HideFaction;
 import hide.types.base.DataBase;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public abstract class HideEvent extends DataBase {
 
@@ -57,6 +60,11 @@ public abstract class HideEvent extends DataBase {
 
 	};
 
+	@SideOnly(Side.CLIENT)
+	void drawOverlay(ScaledResolution resolution) {
+
+	};
+
 	abstract void start();
 
 	abstract void update();
@@ -76,7 +84,7 @@ public abstract class HideEvent extends DataBase {
 	}
 
 	String getSaveName() {
-		return getName()+".json";
+		return getName() + ".json";
 	}
 
 	protected void saveState() {
