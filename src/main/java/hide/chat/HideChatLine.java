@@ -21,7 +21,7 @@ public class HideChatLine {
 	/**クライアント側のチャット*/
 	@SideOnly(Side.CLIENT)
 	public HideChatLine(ITextComponent msg, int id) {
-		this(0, null, null, ChatChannel.Info, "", msg);
+		this(0, null, null, ChatChannel.ClientOut, "", msg);
 		ClientID = id;
 	}
 
@@ -69,7 +69,7 @@ public class HideChatLine {
 	public List<HideChatLine> format() {
 		Minecraft mc = Minecraft.getMinecraft();
 		GuiNewChat gui = mc.ingameGUI.persistantChatGUI;
-		int i = MathHelper.floor((float) gui.getChatWidth() / gui.getChatScale());
+		int i = MathHelper.floor(gui.getChatWidth() / gui.getChatScale());
 		List<ITextComponent> list = GuiUtilRenderComponents.splitText(getMsg(), i, mc.fontRenderer, false, false);
 		return list.stream().map(newmsg -> new HideChatLine(ID, Time, Sender, Channel, ChannelName, newmsg, UpdatedCounter, ClientID)).collect(Collectors.toList());
 	}
@@ -106,7 +106,7 @@ public class HideChatLine {
 
 	@Override
 	public String toString() {
-		return "[ID=" + ID + ",Sender=" + Sender + ",Channel=" + Channel + ",Msg=" + msg + "]";
+		return "[ID=" + ID + ",Sender=" + Sender + ",Channel=" + Channel +",Name=" + ChannelName + ",Msg=" + getMsg().getUnformattedText() + "]";
 	}
 
 }

@@ -15,8 +15,8 @@ import com.google.common.collect.ImmutableSet;
 
 import hide.chat.HideChatLine;
 import hide.chat.HideChatSystem.ChatChannel;
-import hide.chat.gui.ChatScopeHolder.ChatChunk.ChatIterator;
 import hide.chat.PacketChat;
+import hide.chat.gui.ChatScopeHolder.ChatChunk.ChatIterator;
 import hide.core.HideFaction;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.network.play.server.SPacketChat;
@@ -38,17 +38,22 @@ public class ChatScopeHolder {
 	private ChatChunk current;
 	private ChatChunk latest;
 
+	public void refresh() {
+		current.refresh(null);
+		latest.refresh(null);
+	}
+
 	int scroll = 0;
 
 	public void scroll(int amount) {
 		int old = scroll;
 		scroll += amount;
-		if (current.getCountToOldest(scroll, gui.getLineCount()) < 0) {
+		if (current.getCountToOldest(scroll, gui.getLineCount()) < 5 && 0 < amount) {
 			// 最古なら
-			scroll += current.getCountToOldest(scroll, gui.getLineCount());
+			scroll = Math.min(scroll + current.getCountToOldest(scroll, gui.getLineCount()) + 4, scroll);
 		} else if (scroll < 0) {
 			ChatChunk next = current.next;
-			System.out.println("next scroll " + next);
+			log.debug("next scroll " + next);
 			if (next != null) {
 				current = next;
 				scroll = Math.max(current.getTotalCount() + scroll - 1, 0);
@@ -56,7 +61,7 @@ public class ChatScopeHolder {
 				scroll = 0;
 		} else if (current.getTotalCount() <= scroll) {
 			ChatChunk prev = current.prev;
-			System.out.println("prev scroll " + prev);
+			log.debug("prev scroll " + prev);
 			scroll = scroll - current.getTotalCount() + 1;
 			if (prev != null)
 				current = prev;
@@ -72,7 +77,7 @@ public class ChatScopeHolder {
 	}
 
 	public void scrollLatest() {
-		System.out.println("scrollLatest");
+		// System.out.println("scrollLatest");
 		current = latest;
 		checkNext();
 		scroll = 0;
@@ -96,6 +101,7 @@ public class ChatScopeHolder {
 		if (!current.isOldest && current.getTotalCount() < scroll + MAX_VIEW_SIZE + PREPARE_SIZE) {
 			// Listに無いなら
 			if (current.prev == null) {
+				log.debug("req prev c=" + current);
 				HideFaction.NETWORK.sendToServer(PacketChat.reqPrev(channel, current.getOldest().ID, id));
 				waitTime = System.currentTimeMillis() + 500;
 				waitData = true;
@@ -105,6 +111,7 @@ public class ChatScopeHolder {
 		if (current.isFull() && scroll - PREPARE_SIZE < 0) {
 			// Listに無いなら
 			if (current.next == null) {
+				log.debug("req next c=" + current);
 				HideFaction.NETWORK.sendToServer(PacketChat.reqNext(channel, current.getLatest().ID, id));
 				waitTime = System.currentTimeMillis() + 500;
 				waitData = true;
@@ -112,8 +119,14 @@ public class ChatScopeHolder {
 		}
 	}
 
+	/** チャンクを跨いで取得するイテレータ */
 	public Iterator<HideChatLine> getIterator() {
 		return new ChatIterator(getCurrent(), scroll);
+	}
+
+	/** 現在表示できる行数 */
+	public int getCount() {
+		return Math.min(gui.getLineCount() + current.getCountToOldest(scroll, gui.getLineCount()), gui.getLineCount());
 	}
 
 	/** サーバーへのデータ要求インターバル */
@@ -139,8 +152,7 @@ public class ChatScopeHolder {
 			return false;
 		// 表示できないサイズを許容しない
 		if (current != null && size <= 1) {
-			ChatChunk tes = new ChatChunk(chatArray, size, !isNext);
-			System.out.println("debug " + current + " " + tes.isLatest + " " + tes.isOldest + " " + tes + " ");
+			log.warn("invalid chunk " + new ChatChunk(chatArray, size, isNext));
 			return false;
 		}
 		ChatChunk scope = new ChatChunk(chatArray, size, !isNext);
@@ -150,7 +162,8 @@ public class ChatScopeHolder {
 		if (current == null) {
 			log.info("init latest chunk");
 			current = scope;
-			latest = scope.makeNextScope();
+			// もしスコープが埋まっているなら新しいものを用意
+			latest = scope.isFull() ? scope.makeNextScope() : scope;
 			while (!newChatQueue.isEmpty()) {
 				addChatLine(newChatQueue.poll(), true);
 			}
@@ -158,6 +171,8 @@ public class ChatScopeHolder {
 		} else {
 			current.connect(scope);
 			current.remove(1, null);
+			// 最新チャンクへの接続を試みる
+			latest.connect(scope);
 		}
 		return true;
 	}
@@ -167,26 +182,19 @@ public class ChatScopeHolder {
 	public void addChatLine(HideChatLine line, boolean isClient) {
 		if (!channel.contains(new ImmutablePair(line.Channel, line.ChannelName)))
 			return;
-		System.out.println("add clientChat " + line.Sender + " " + line.getMsg().getFormattedText());
-
 		// スコープが無いならキューに一時保存
-		if (current == null) {
+		if (latest == null) {
 			newChatQueue.add(line);
 		} else {
 			if (isClient) {
-				line.format().forEach(l -> {
-					latest.addClinetChat(l);
-					scroll(-1);
-				});
+				scroll(-latest.addClinetChat(line));
 			} else {
-				line.format().forEach(l -> {
-					scroll(-1);
-					if (latest.addChat(l)) {
-						// 一杯になったら次を用意
-						System.out.println("arrocate new Chank");
-						latest = latest.makeNextScope();
-					}
-				});
+				scroll(-latest.addChat(line));
+				if (latest.isFull()) {
+					// 一杯になったら次を用意
+					System.out.println("arrocate new Chank");
+					latest = latest.makeNextScope();
+				}
 			}
 		}
 
@@ -225,7 +233,7 @@ public class ChatScopeHolder {
 		/** 参照を削除 */
 		public void remove(int length, ChatChunk from) {
 			length--;
-			//System.out.println("remove " + this + " " + length);
+			// System.out.println("remove " + this + " " + length);
 			if (prev != null && prev != from)
 				if (length < 0) {
 					prev.next = null;
@@ -240,6 +248,16 @@ public class ChatScopeHolder {
 					next.remove(length, this);
 		}
 
+		/** 参照を削除 */
+		public void refresh(ChatChunk from) {
+			drawnChat.clear();
+			clientChat.forEach(line -> addFormatChat(line));
+			if (prev != null && prev != from)
+				prev.refresh(this);
+			if (next != null && next != from)
+				next.refresh(this);
+		}
+
 		int size;
 		/** 一番後ろのチャットID */
 		final int pos;
@@ -249,6 +267,8 @@ public class ChatScopeHolder {
 		/** クライアントのみの一時的な行を含む */
 		final List<HideChatLine> clientChat;
 
+		final List<HideChatLine> drawnChat;
+
 		/** 最初のチャンクの場合はフラグ */
 		protected ChatChunk(HideChatLine[] chatArray, int size, boolean isOld) {
 			this.size = size;
@@ -257,8 +277,8 @@ public class ChatScopeHolder {
 			pos = size == 0 ? 0 : chatArray[chatArray.length - 1].ID;
 			chatLine = chatArray;
 			clientChat = new ArrayList<>(size);
+			drawnChat = new ArrayList<>(size);
 			for (int i = CHUNK_SIZE - 1; CHUNK_SIZE - size <= i; i--) {
-				// 改行とフォーマット
 				addClinetChat(chatArray[i]);
 			}
 			// System.out.println(this + " isOldest " + isOldest + " isLatest " + isLatest);
@@ -272,39 +292,49 @@ public class ChatScopeHolder {
 			return getOldest().ID <= scope.getLatest().ID && scope.getOldest().ID <= getLatest().ID;
 		}
 
-		/** チャットを追加 行数を返す */
+		/** チャットを追加 追加した行数を返す */
 		protected int addClinetChat(HideChatLine chat) {
+			clientChat.add(chat);
+			return addFormatChat(chat);
+		}
+
+		/** 改行 */
+		protected int addFormatChat(HideChatLine chat) {
 			List<HideChatLine> list = chat.format();
 			list.forEach(l -> {
-				clientChat.add(l);
+				drawnChat.add(l);
 			});
 			return list.size();
 		}
 
 		/** チャットラインを追加 チャンネルチェックはしてないので注意 もし一杯になったらtrue */
-		protected boolean addChat(HideChatLine chat) {
-			addClinetChat(chat);
+		protected int addChat(HideChatLine chat) {
+			int i = addClinetChat(chat);
 			chatLine[CHUNK_SIZE - size - 1] = chat;
 			size++;
 			this.isLatest = isLatest && !isFull();
-			return CHUNK_SIZE == size;
+			return i;
 		}
 
 		protected void deleteClientChat(int id) {
 			clientChat.removeIf(line -> line.ClientID == id);
+			drawnChat.removeIf(line -> line.ClientID == id);
 		}
 
-		/** 末端を引き継いだ次のスコープを作成 */
+		/** 末端を引き継いだ次のスコープを作成 自動リンク */
 		protected ChatChunk makeNextScope() {
 			if (size != CHUNK_SIZE)
 				throw new ArrayIndexOutOfBoundsException("scope cap is not full");
 			HideChatLine[] newArray = new HideChatLine[CHUNK_SIZE];
 			newArray[CHUNK_SIZE - 1] = getLatest();
-			return new ChatChunk(newArray, 1, false);
+			ChatChunk newnext = new ChatChunk(newArray, 1, false);
+			connect(newnext);
+			return newnext;
 		}
 
+		/** 描画用リストのサイズ */
 		public int getTotalCount() {
-			return clientChat.size();
+			return drawnChat.size();
 		}
 
 		/** 末端までの余裕 */
@@ -361,7 +391,7 @@ public class ChatScopeHolder {
 
 			protected ChatIterator(ChatChunk start, int scroll) {
 				current = start;
-				index = Math.min(current.clientChat.size() - scroll, current.clientChat.size());
+				index = Math.min(current.drawnChat.size() - scroll, current.drawnChat.size());
 			}
 
 			@Override
@@ -380,9 +410,9 @@ public class ChatScopeHolder {
 				if (index < 0) {
 					// １つ前のチャンクへ
 					current = current.prev;
-					index = current.clientChat.size() + index - 1;
+					index = current.drawnChat.size() + index - 1;
 				}
-				return current.clientChat.get(index);
+				return current.drawnChat.get(index);
 			}
 		}
 	}

@@ -44,24 +44,25 @@ public class HideEventSystem implements IHideSubSystem {
 
 	File eventDir = new File(Loader.instance().getConfigDir().getParent(), "Hide/event");
 
-	public static SyncEntry<List<HideEvent>> HideEventSync = DataSync.register(ArrayList::new, new ISyncInterface<List<HideEvent>>() {
-		@Override
-		public void fromBytes(List<HideEvent> obj, ByteBuf buf) {
-			obj.clear();
-			int count = buf.readInt();
-			for (int i = 0; i < count; i++) {
-				obj.add(HideEvent.fromJson(ByteBufUtils.readUTF8String(buf)));
-			}
-		}
+	public static SyncEntry<List<HideEvent>> HideEventSync = DataSync.register(ArrayList::new,
+			new ISyncInterface<List<HideEvent>>() {
+				@Override
+				public void fromBytes(List<HideEvent> obj, ByteBuf buf) {
+					obj.clear();
+					int count = buf.readInt();
+					for (int i = 0; i < count; i++) {
+						obj.add(HideEvent.fromJson(ByteBufUtils.readUTF8String(buf)));
+					}
+				}
 
-		@Override
-		public void toBytes(List<HideEvent> obj, ByteBuf buf) {
-			buf.writeInt(obj.size());
-			for (HideEvent hideEvent : obj) {
-				ByteBufUtils.writeUTF8String(buf, hideEvent.toJson());
-			}
-		}
-	});
+				@Override
+				public void toBytes(List<HideEvent> obj, ByteBuf buf) {
+					buf.writeInt(obj.size());
+					for (HideEvent hideEvent : obj) {
+						ByteBufUtils.writeUTF8String(buf, hideEvent.toJson());
+					}
+				}
+			});
 	public static HideEventSystem INSTANCE = new HideEventSystem();
 
 	static {
@@ -128,9 +129,9 @@ public class HideEventSystem implements IHideSubSystem {
 			try {
 				if (!file.getName().startsWith("-")) {
 					HideEvent arg = HideEvent.fromFile(file);
-					//index付与
+					// index付与
 					arg.index = (byte) eventList.size();
-					//load
+					// load
 					loadState(arg);
 					eventList.add(arg);
 				}
@@ -187,7 +188,7 @@ public class HideEventSystem implements IHideSubSystem {
 		return false;
 	}
 
-	/**サンプル書き込み*/
+	/** サンプル書き込み */
 	private void writeSample(Class<? extends DataBase> clazz) {
 
 		File file = new File(eventDir.getPath(), "-" + clazz.getSimpleName() + ".json");
@@ -235,7 +236,7 @@ public class HideEventSystem implements IHideSubSystem {
 		public IMessage onMessage(NetMsg msg, MessageContext ctx) {
 			Minecraft.getMinecraft().addScheduledTask(() -> {
 				INSTANCE.HideEventSync.ClientData.get(msg.index).fromServer(msg.buffer);
-
+				msg.buffer.release();
 			});
 			return null;
 		}

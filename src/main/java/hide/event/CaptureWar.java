@@ -10,6 +10,7 @@ import hide.core.util.BufUtil;
 import hide.event.gui.GuiCapProgress;
 import hide.event.gui.GuiCapState;
 import hide.types.base.DataBase;
+import hide.util.HideByteBufUtil;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -19,20 +20,20 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class CaptureWar extends HideEvent {
 
-	//== 本体設定 ==
-	/**占領の単位*/
+	// == 本体設定 ==
+	/** 占領の単位 */
 	public static final DataEntry<CaptureManager.Target> Target = of(CaptureManager.Target.TEAM);
-	/**勝利条件*/
+	/** 勝利条件 */
 	public static final DataEntry<VictoryConditions> VictoryType = of(VictoryConditions.Both);
-	/**占領地*/
+	/** 占領地 */
 	public static final DataEntry<CapPointData[]> CapRegion = of(new CapPointData[0]);
-	/**占領ロジック*/
+	/** 占領ロジック */
 	public static final DataEntry<PointType> CapWinType = of(PointType.Majority);
-	/**ポイントの加算対象*/
+	/** ポイントの加算対象 */
 	public static final DataEntry<PointType> PointGainType = of(PointType.All);
-	/**占領が維持されるか*/
+	/** 占領が維持されるか */
 	public static final DataEntry<Boolean> KeepCap = of(true);
-	/**他チームが居る場合占領を進めない*/
+	/** 他チームが居る場合占領を進めない */
 	public static final DataEntry<Boolean> ExclusiveCap = of(false);
 
 	enum PointType {
@@ -67,7 +68,7 @@ public class CaptureWar extends HideEvent {
 		public static final DataEntry<Integer> PointGain = of(1);
 	}
 
-	//== セーブ ==
+	// == セーブ ==
 	private class CapWarSave {
 		public CapWarSave() {
 			CapPointData[] array = get(CapRegion);
@@ -79,6 +80,7 @@ public class CaptureWar extends HideEvent {
 		}
 
 		CountMap<String> point = new CountMap<String>();
+		transient boolean state_change = false;
 		CapPoint[] state;
 		boolean isStart = true;
 	}
@@ -87,9 +89,9 @@ public class CaptureWar extends HideEvent {
 
 	private class CapPoint {
 		float progress;
-		/**現在占領中*/
+		/** 現在占領中 */
 		String current;
-		/**占領を試みているor1つ前*/
+		/** 占領を試みているor1つ前 */
 		String tmp;
 		CapState state;
 
@@ -104,7 +106,7 @@ public class CaptureWar extends HideEvent {
 	public void initServer(HideEventSystem manager) {
 		if (save == null)
 			save = new CapWarSave();
-		//登録
+		// 登録
 		CapPointData[] array = get(CapRegion);
 		for (CapPointData entry : array) {
 			entry.entry.tag = entry.get(CapPointData.Tag);
@@ -133,16 +135,16 @@ public class CaptureWar extends HideEvent {
 
 	@SubscribeEvent()
 	public void capUpdate(CapUpdateEvent event) {
-		//System.out.println("update " + getName() + " " + event.getDeltaTime());
+		// System.out.println("update " + getName() + " " + event.getDeltaTime());
 		if (!save.isStart)
 			return;
-		//秒数換算
+		// 秒数換算
 		float delta = event.getDeltaTime() / 1000f;
 		CapPointData[] capPointData = get(CapRegion);
 		for (int i = 0; i < capPointData.length; i++) {
 			CapPointData entry = capPointData[i];
 			CapPoint point = save.state[i];
-			//更新
+			// 更新
 			int max = 0;
 			String res = null;
 			for (Entry<String, Integer> pair : event.getMap(entry.entry).entrySet()) {
@@ -156,16 +158,17 @@ public class CaptureWar extends HideEvent {
 				}
 			}
 			if (res != null) {
-				//現在取ってるチーム以外なら
+				// 現在取ってるチーム以外なら
 				if (!res.equals(point.current)) {
 					point.state = CapState.Invade;
-					//占領更新
+					// 占領更新
 					if (point.current == null) {
 						point.current = res;
 					} else {
-						point.progress -= delta / entry.get(CapPointData.NeutralizeTime) * max * entry.get(CapPointData.IncreaseFactor);
+						point.progress -= delta / entry.get(CapPointData.NeutralizeTime) * max
+								* entry.get(CapPointData.IncreaseFactor);
 						point.tmp = res;
-						//point.tmp = res;
+						// point.tmp = res;
 						if (point.progress <= 0) {
 							point.current = null;
 							point.progress = 0;
@@ -176,7 +179,8 @@ public class CaptureWar extends HideEvent {
 				if (res.equals(point.current)) {
 					point.state = CapState.Regain;
 					if (point.progress < 1) {
-						point.progress += delta / (float) entry.get(CapPointData.CapTime) * max * entry.get(CapPointData.IncreaseFactor);
+						point.progress += delta / entry.get(CapPointData.CapTime) * max
+								* entry.get(CapPointData.IncreaseFactor);
 						if (1 <= point.progress) {
 							point.state = CapState.Occupied;
 						}
@@ -184,20 +188,21 @@ public class CaptureWar extends HideEvent {
 					}
 				}
 			} else if (max != 0) {
-				//均衡なら
+				// 均衡なら
 				if (point.state != CapState.Stop) {
 					point.mark();
 					point.state = CapState.Stop;
 				}
 			}
-			//誰も入っていない場合は設定に応じて減衰
+			// 誰も入っていない場合は設定に応じて減衰
 			if (max == 0) {
-				//侵攻中だった場合
+				// 侵攻中だった場合
 				if (point.state == CapState.Invade && 0 < point.progress && point.progress < 1) {
-					point.progress += delta / (float) entry.get(CapPointData.CapTime);
+					point.progress += delta / entry.get(CapPointData.CapTime);
 					point.mark();
-				} else if ((point.state == CapState.Regain && point.progress < 1 || !get(KeepCap)) && 0 < point.progress) {
-					point.progress -= delta / (float) entry.get(CapPointData.NeutralizeTime);
+				} else if ((point.state == CapState.Regain && point.progress < 1 || !get(KeepCap))
+						&& 0 < point.progress) {
+					point.progress -= delta / entry.get(CapPointData.NeutralizeTime);
 					if (point.progress <= 0) {
 						point.state = CapState.None;
 						point.progress = 0;
@@ -207,7 +212,7 @@ public class CaptureWar extends HideEvent {
 				}
 			}
 
-			//System.out.println(point.progress+" "+point.current+" "+point.dirty);
+			// System.out.println(point.progress+" "+point.current+" "+point.dirty);
 		}
 
 		toClient();
@@ -215,8 +220,8 @@ public class CaptureWar extends HideEvent {
 		for (CapPoint point : save.state) {
 			point.dirty = false;
 		}
-		//System.out.println("state " + ArrayUtils.toString(capState));
-		//System.out.println("value " + ArrayUtils.toString(capCurrent));
+		// System.out.println("state " + ArrayUtils.toString(capState));
+		// System.out.println("value " + ArrayUtils.toString(capCurrent));
 
 		saveState();
 	}
@@ -224,6 +229,7 @@ public class CaptureWar extends HideEvent {
 	@Override
 	public void start() {
 		System.out.println("Start event");
+		save.point.clear();
 	}
 
 	transient private CountMap<String> countCash = new CountMap();
@@ -237,15 +243,21 @@ public class CaptureWar extends HideEvent {
 				CapPointData entry = capPointData[i];
 				CapPoint point = save.state[i];
 				System.out.println("update  current " + point.current);
-				if (point.current != null)
+				if (point.current != null) {
 					if (get(PointGainType) == PointType.All)
 						save.point.increment(point.current, entry.get(CapPointData.PointGain));
 					else
 						countCash.increment(point.current, entry.get(CapPointData.PointGain));
+					save.state_change = true;
+				}
 			}
 			if (get(PointGainType) == PointType.Majority) {
 				Entry<String, Integer> big = countCash.biggest();
-				save.point.increment(big.getKey(), big.getValue());
+				if (big != null) {
+					save.point.increment(big.getKey(), big.getValue());
+					save.state_change = true;
+				}
+
 			}
 		}
 		System.out.println("Update event " + save.point + " " + get(VictoryType));
@@ -278,9 +290,15 @@ public class CaptureWar extends HideEvent {
 			point.tmp = BufUtil.readString(buf);
 			point.state = CapState.values()[buf.readByte()];
 			CapPointData data = get(CapRegion)[index];
-			GuiCapProgress.addOrUpdate(Minecraft.getMinecraft().getToastGui(), data.get(CapPointData.Tag), data.get(CapPointData.Name), point.state, point.current, point.tmp, get(Target).getKey(Minecraft.getMinecraft().player),
-					point.progress);
+			GuiCapProgress.addOrUpdate(Minecraft.getMinecraft().getToastGui(), data.get(CapPointData.Tag),
+					data.get(CapPointData.Name), point.state, point.current, point.tmp,
+					get(Target).getKey(Minecraft.getMinecraft().player), point.progress);
 
+
+		}
+		if(buf.readBoolean()) {
+			HideByteBufUtil.readCountMap(buf, save.point);
+			gui.updateState(get(Target).getKey(Minecraft.getMinecraft().player), save.point);
 		}
 	}
 
@@ -301,6 +319,11 @@ public class CaptureWar extends HideEvent {
 				BufUtil.writeString(buf, point.tmp);
 				buf.writeByte(point.state.index);
 			}
+		}
+		buf.writeBoolean(save.state_change);
+		if(save.state_change) {
+			save.state_change = false;
+			HideByteBufUtil.writeCountMap(buf, save.point);
 		}
 	}
 

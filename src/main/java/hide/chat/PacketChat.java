@@ -156,11 +156,11 @@ public class PacketChat implements IMessage, IMessageHandler<PacketChat, IMessag
 				switch (msg.mode) {
 				case REQ_NEXT:
 					HideFaction.NETWORK.sendTo(chatChunkNext(HideChatDB.getNextChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
-					System.out.println("新着 チャット送信 ");
+					//System.out.println("新着 チャット送信 ");
 					break;
 				case REQ_PREV:
 					HideFaction.NETWORK.sendTo(chatChunkPrev(HideChatDB.getPrevChatChunk(ctx.getServerHandler().player, msg.channel, msg.from), msg.id), player);
-					System.out.println("過去 チャット送信 ");
+					//System.out.println("過去 チャット送信 ");
 					break;
 				default:
 					break;
@@ -176,15 +176,15 @@ public class PacketChat implements IMessage, IMessageHandler<PacketChat, IMessag
 			GuiHideNewChat chat = (GuiHideNewChat) Minecraft.getMinecraft().ingameGUI.getChatGUI();
 			switch (msg.mode) {
 			case NEWCHAT:
-				HideFaction.log.info("receive new chat");
+				log.debug("receive new chat "+msg.newLine);
 				chat.addNewChatLine(msg.newLine);
 				break;
 			case CHUNK_NEXT:
-				HideFaction.log.info("receive old chat " + msg.id);
+				log.debug("receive old chat " + msg.id);
 				chat.addChatChunk(msg.COldChat, msg.COldChatSize, msg.id, true);
 				break;
 			case CHUNK_PREV:
-				HideFaction.log.info("receive old chat " + msg.id);
+				log.debug("receive old chat " + msg.id);
 				chat.addChatChunk(msg.COldChat, msg.COldChatSize, msg.id, false);
 				break;
 			case CLEAR:

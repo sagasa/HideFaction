@@ -1,5 +1,6 @@
 package hide.event.gui;
 
+import hide.capture.CaptureManager.CountMap;
 import hide.event.CaptureWar;
 import hide.event.CaptureWar.CapPointData;
 import net.minecraft.client.Minecraft;
@@ -79,5 +80,10 @@ public class GuiCapState {
 	private static void drawStringCenter(FontRenderer render, String str, int x, int y, int color) {
 		int width = render.getStringWidth(str);
 		render.drawString(str, x - width / 2, y - render.FONT_HEIGHT / 2, color);
+	}
+
+
+	public void updateState(String myTeam,CountMap<String> a) {
+
 	}
 }
