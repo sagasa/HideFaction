@@ -8,6 +8,9 @@ commands.region.deop.success=deop %s
 hide.gui.capture.start=%s capturing by %s
 hide.gui.capture.success=%s captured by %s
 
+hide.gui.capstate.view=%s %npoint #%n
+hide.gui.capstate.viewnone=None
+
 hide.gui.stop=Stop
 hide.gui.cap=Taken
 hide.gui.recap=Regaining
