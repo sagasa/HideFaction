@@ -6,6 +6,8 @@ import hide.capture.CapUpdateEvent;
 import hide.capture.CaptureManager;
 import hide.capture.CaptureManager.CapEntry;
 import hide.capture.CaptureManager.CountMap;
+import hide.chat.gui.GuiHideNewChat;
+import hide.core.HideEvents.TeamUpdateClient;
 import hide.core.util.BufUtil;
 import hide.event.gui.GuiCapProgress;
 import hide.event.gui.GuiCapState;
@@ -76,7 +78,7 @@ public class CaptureWar extends HideEvent {
 			for (int i = 0; i < state.length; i++) {
 				state[i] = new CapPoint();
 			}
-			System.out.println();
+			System.out.println("init save " + array.length);
 		}
 
 		CountMap<String> point = new CountMap<String>();
@@ -93,7 +95,7 @@ public class CaptureWar extends HideEvent {
 		String current;
 		/** 占領を試みているor1つ前 */
 		String tmp;
-		CapState state;
+		CapState state = CapState.None;
 
 		transient boolean dirty;
 
@@ -104,8 +106,7 @@ public class CaptureWar extends HideEvent {
 
 	@Override
 	public void initServer(HideEventSystem manager) {
-		if (save == null)
-			save = new CapWarSave();
+		save = new CapWarSave();
 		// 登録
 		CapPointData[] array = get(CapRegion);
 		for (CapPointData entry : array) {
@@ -119,7 +120,15 @@ public class CaptureWar extends HideEvent {
 	void initClient() {
 		save = new CapWarSave();
 		gui = new GuiCapState(this);
-		System.out.println("Hi " + gui);
+		System.out.println("init client Hi " + gui);
+	}
+
+	static int guiCount = 0;
+
+	@SideOnly(Side.CLIENT)
+	@Override
+	void preDrawOverlay() {
+		guiCount = 0;
 	}
 
 	@SideOnly(Side.CLIENT)
@@ -129,14 +138,26 @@ public class CaptureWar extends HideEvent {
 	@Override
 	void drawOverlay(ScaledResolution resolution) {
 		if (gui != null) {
-			gui.draw(resolution);
+			gui.draw(resolution, guiCount);
+			guiCount++;
 		}
+	}
+
+	@SubscribeEvent()
+	@SideOnly(Side.CLIENT)
+	public void teamUpdate(TeamUpdateClient event) {
+		if (side == Side.SERVER)
+			return;
+		((GuiHideNewChat) Minecraft.getMinecraft().ingameGUI.persistantChatGUI).updateTeam();
+		gui.updateScoreState(getKey());
+		gui.updateState(getKey());
+
 	}
 
 	@SubscribeEvent()
 	public void capUpdate(CapUpdateEvent event) {
 		// System.out.println("update " + getName() + " " + event.getDeltaTime());
-		if (!save.isStart)
+		if (!save.isStart||side == Side.CLIENT)
 			return;
 		// 秒数換算
 		float delta = event.getDeltaTime() / 1000f;
@@ -215,7 +236,7 @@ public class CaptureWar extends HideEvent {
 			// System.out.println(point.progress+" "+point.current+" "+point.dirty);
 		}
 
-		toClient();
+		toClient(null);
 
 		for (CapPoint point : save.state) {
 			point.dirty = false;
@@ -278,6 +299,12 @@ public class CaptureWar extends HideEvent {
 		return gson.toJson(save);
 	}
 
+	/**自分のチーム取得*/
+	@SideOnly(Side.CLIENT)
+	private String getKey() {
+		return get(Target).getKey(Minecraft.getMinecraft().player);
+	}
+
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void fromServer(ByteBuf buf) {
@@ -293,26 +320,27 @@ public class CaptureWar extends HideEvent {
 			GuiCapProgress.addOrUpdate(Minecraft.getMinecraft().getToastGui(), data.get(CapPointData.Tag),
 					data.get(CapPointData.Name), point.state, point.current, point.tmp,
 					get(Target).getKey(Minecraft.getMinecraft().player), point.progress);
-
+			gui.updateState(index, point.progress, point.current, getKey());
 
 		}
-		if(buf.readBoolean()) {
+		if (buf.readBoolean()) {
 			HideByteBufUtil.readCountMap(buf, save.point);
-			gui.updateState(get(Target).getKey(Minecraft.getMinecraft().player), save.point);
+			gui.updateScoreState(save.point);
+			gui.updateScoreState(getKey());
 		}
 	}
 
 	@Override
-	public void toBytes(ByteBuf buf) {
+	public void toBytes(ByteBuf buf, boolean all) {
 		int size = 0;
 		for (CapPoint point : save.state) {
-			if (point.dirty)
+			if (point.dirty || all)
 				size++;
 		}
 		buf.writeByte(size);
 		for (int i = 0; i < save.state.length; i++) {
 			CapPoint point = save.state[i];
-			if (point.dirty) {
+			if (point.dirty || all) {
 				buf.writeByte(i);
 				buf.writeFloat(point.progress);
 				BufUtil.writeString(buf, point.current);
@@ -320,8 +348,8 @@ public class CaptureWar extends HideEvent {
 				buf.writeByte(point.state.index);
 			}
 		}
-		buf.writeBoolean(save.state_change);
-		if(save.state_change) {
+		buf.writeBoolean(save.state_change || all);
+		if (save.state_change || all) {
 			save.state_change = false;
 			HideByteBufUtil.writeCountMap(buf, save.point);
 		}

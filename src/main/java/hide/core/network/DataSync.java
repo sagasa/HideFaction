@@ -2,7 +2,7 @@ package hide.core.network;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import hide.core.HideFaction;
@@ -67,22 +67,22 @@ public class DataSync implements IMessageHandler<SyncMsg, IMessage> {
 	/***/
 	public static class SyncEntry<T> {
 		private int index = -1;
-		List<Consumer<T>> onChange = new ArrayList<>();
+		List<BiConsumer<T, T>> onChange = new ArrayList<>();
 		ISyncInterface syncInterface;
+		Supplier<T> construct;
 		public final T ServerData;
-		public final T ClientData;
+		public T ClientData;
 
-		public void addListener(Consumer<T> run) {
+		public void addListener(BiConsumer<T, T> run) {
 			onChange.add(run);
 		}
 
-		public void onChange() {
-			onChange.forEach(f -> f.accept(ClientData));
-		}
-
-		/**クライアントデータに書き込み*/
+		/**クライアントデータに書き込み スレッド注意*/
 		void fromBytes(ByteBuf buf) {
+			T old = ClientData;
+			ClientData = construct.get();
 			syncInterface.fromBytes(ClientData, buf);
+			onChange.forEach(f -> f.accept(old, ClientData));
 		}
 
 		/**サーバーデータからデータ化*/
@@ -91,6 +91,7 @@ public class DataSync implements IMessageHandler<SyncMsg, IMessage> {
 		}
 
 		private SyncEntry(Supplier<T> construct, ISyncInterface<T> syncInterface) {
+			this.construct = construct;
 			this.ServerData = construct.get();
 			this.ClientData = construct.get();
 			this.syncInterface = syncInterface;
@@ -98,9 +99,10 @@ public class DataSync implements IMessageHandler<SyncMsg, IMessage> {
 	}
 
 	@Override
-	public IMessage onMessage(SyncMsg message, MessageContext ctx) {
+	public IMessage onMessage(SyncMsg msg, MessageContext ctx) {
 		Minecraft.getMinecraft().addScheduledTask(() -> {
-			message.entry.onChange();
+			msg.entry.fromBytes(msg.buffer);
+			msg.buffer.release();
 		});
 		return null;
 	}
@@ -110,6 +112,7 @@ public class DataSync implements IMessageHandler<SyncMsg, IMessage> {
 		}
 
 		SyncEntry<?> entry;
+		ByteBuf buffer;
 
 		public SyncMsg(SyncEntry<?> entry) {
 			this.entry = entry;
@@ -118,7 +121,7 @@ public class DataSync implements IMessageHandler<SyncMsg, IMessage> {
 		@Override
 		public void fromBytes(ByteBuf buf) {
 			entry = syncEntries.get(buf.readByte());
-			entry.fromBytes(buf);
+			buffer = buf.copy();
 		}
 
 		@Override

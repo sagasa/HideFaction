@@ -6,8 +6,18 @@
       {
         "Type": "CapPointData",
         "Values": {
+          "Name": "占領地1",
         	"Tag": "CapTag2",
           "CapTime": 3,
+          "NeutralizeTime": 3
+        }  
+      },
+      {
+        "Type": "CapPointData",
+        "Values": {
+          "Name": "占領地2",
+          "Tag": "CapTag",
+          "CapTime": 6,
           "NeutralizeTime": 3
 
         }

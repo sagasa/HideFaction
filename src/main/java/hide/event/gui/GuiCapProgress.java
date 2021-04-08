@@ -1,9 +1,10 @@
 package hide.event.gui;
 
+import static hide.event.gui.CapWarGuiUtil.*;
+
 import hide.event.CaptureWar.CapState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.toasts.GuiToast;
 import net.minecraft.client.gui.toasts.IToast;
 import net.minecraft.client.renderer.GlStateManager;
@@ -30,20 +31,11 @@ public class GuiCapProgress implements IToast {
 
 	CapState state;
 
-	private static final int ENEMY = 0xFFeb6101;
-	private static final int FRIEND = 0xFF0000FF;
-	private static final int NORMAL = 0xFF666666;
 
 	int color_base;
 	int color_over;
 
-	private int getColor(String team, String myTeam) {
-		if (team == null)
-			return 0xFF333333;
-		else if (team.equals(myTeam))
-			return FRIEND;
-		return ENEMY;
-	}
+
 
 	GuiCapProgress setState(String tag, String name, CapState state, String team, String tmp, String myTeam, float progress) {
 		this.tag = tag;
@@ -64,10 +56,7 @@ public class GuiCapProgress implements IToast {
 		Good, Norm, Bad
 	}
 
-	public static void drawProgress(int left, int top, int right, int bottom, int color_base, int color_over, float progress) {
-		Gui.drawRect(left, top, right, bottom, color_base);
-		Gui.drawRect(left, top, (int) (left + (right - left) * progress), bottom, color_over);
-	}
+
 
 	public IToast.Visibility draw(GuiToast toastGui, long delta) {
 

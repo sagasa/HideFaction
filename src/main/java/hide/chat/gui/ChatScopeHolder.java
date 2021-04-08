@@ -126,6 +126,8 @@ public class ChatScopeHolder {
 
 	/** 現在表示できる行数 */
 	public int getCount() {
+		if (current == null)
+			return 0;
 		return Math.min(gui.getLineCount() + current.getCountToOldest(scroll, gui.getLineCount()), gui.getLineCount());
 	}
 

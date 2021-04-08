@@ -16,9 +16,11 @@ import hide.core.HideFaction;
 import hide.types.base.DataBase;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+/**イベントバスにはクライアント側も登録される sideで分岐必須*/
 public abstract class HideEvent extends DataBase {
 
 	protected Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -28,6 +30,8 @@ public abstract class HideEvent extends DataBase {
 
 	/** 親の登録名 String */
 	public static final DataEntry<String> ParentName = of("");
+
+	protected Side side = Side.SERVER;
 
 	protected void setParent(HideEvent data) {
 		parent = data;
@@ -65,6 +69,11 @@ public abstract class HideEvent extends DataBase {
 
 	};
 
+	@SideOnly(Side.CLIENT)
+	void preDrawOverlay() {
+
+	};
+
 	abstract void start();
 
 	abstract void update();
@@ -77,10 +86,15 @@ public abstract class HideEvent extends DataBase {
 
 	abstract void fromServer(ByteBuf buf);
 
-	abstract void toBytes(ByteBuf buf);
+	/**ログイン時等全部配信するときtrue*/
+	abstract void toBytes(ByteBuf buf, boolean all);
 
-	protected void toClient() {
-		HideFaction.NETWORK.sendToAll(new HideEventSystem.NetMsg(this));
+	/**指定した場合全種送信*/
+	protected void toClient(EntityPlayerMP player) {
+		if (player == null)
+			HideFaction.NETWORK.sendToAll(new HideEventSystem.NetMsg(this));
+		else
+			HideFaction.NETWORK.sendTo(new HideEventSystem.NetMsg(this, true), player);
 	}
 
 	String getSaveName() {

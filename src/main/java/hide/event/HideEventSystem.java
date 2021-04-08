@@ -21,6 +21,7 @@ import hide.schedule.ScheduleManager;
 import hide.types.base.DataBase;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
@@ -28,6 +29,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -51,7 +53,10 @@ public class HideEventSystem implements IHideSubSystem {
 					obj.clear();
 					int count = buf.readInt();
 					for (int i = 0; i < count; i++) {
-						obj.add(HideEvent.fromJson(ByteBufUtils.readUTF8String(buf)));
+						HideEvent event = HideEvent.fromJson(ByteBufUtils.readUTF8String(buf));
+						event.index = (byte) i;
+						event.side = Side.CLIENT;
+						obj.add(event);
 					}
 				}
 
@@ -65,8 +70,29 @@ public class HideEventSystem implements IHideSubSystem {
 			});
 	public static HideEventSystem INSTANCE = new HideEventSystem();
 
+	/*リスナにクライアント側の登録処理を*/
 	static {
-		HideEventSync.addListener(list -> list.forEach(e -> e.initClient()));
+		HideEventSync.addListener((oldList, newList) -> {
+
+			newList.forEach(e -> e.initClient());
+
+			// 削除
+			oldList.forEach(arg -> {
+				MinecraftForge.EVENT_BUS.unregister(arg);
+			});
+
+			// 親子関係
+			HideEvent.resolvParent(newList);
+
+			// 登録
+			newList.forEach(arg -> {
+				arg.initClient();
+			});
+			newList.forEach(arg -> {
+				MinecraftForge.EVENT_BUS.register(arg);
+			});
+
+		});
 	}
 
 	List<HideEvent> eventList = HideEventSync.ServerData;
@@ -85,10 +111,16 @@ public class HideEventSystem implements IHideSubSystem {
 		ScheduleManager.load();
 	}
 
+	@SubscribeEvent
+	public void login(PlayerLoggedInEvent event) {
+		HideEventSync.ServerData.forEach(e -> e.toClient((EntityPlayerMP) event.player));
+	}
+
 	@SubscribeEvent()
 	@SideOnly(Side.CLIENT)
 	public void drawGui(RenderGameOverlayEvent event) {
 		if (event.getType() == ElementType.HOTBAR) {
+			HideEventSync.ClientData.forEach(e -> e.preDrawOverlay());
 			HideEventSync.ClientData.forEach(e -> e.drawOverlay(event.getResolution()));
 		}
 	}
@@ -144,13 +176,12 @@ public class HideEventSystem implements IHideSubSystem {
 
 		// 登録
 		eventList.forEach(arg -> {
-			MinecraftForge.EVENT_BUS.register(arg);
-		});
-		eventList.forEach(arg -> {
 			map.put(arg.getName(), arg);
 			arg.initServer(this);
 		});
-
+		eventList.forEach(arg -> {
+			MinecraftForge.EVENT_BUS.register(arg);
+		});
 	}
 
 	private void loadState(HideEvent event) {
@@ -204,7 +235,7 @@ public class HideEventSystem implements IHideSubSystem {
 	public static class NetMsg implements IMessage {
 
 		HideEvent event;
-
+		boolean all;
 		byte index;
 		ByteBuf buffer;
 
@@ -213,8 +244,13 @@ public class HideEventSystem implements IHideSubSystem {
 		}
 
 		public NetMsg(HideEvent event) {
+			this(event, false);
+		}
+
+		public NetMsg(HideEvent event, boolean all) {
 			this.event = event;
 			index = event.index;
+			this.all = all;
 		}
 
 		@Override
@@ -226,7 +262,7 @@ public class HideEventSystem implements IHideSubSystem {
 		@Override
 		public void toBytes(ByteBuf buf) {
 			buf.writeByte(index);
-			event.toBytes(buf);
+			event.toBytes(buf, all);
 		}
 
 	}

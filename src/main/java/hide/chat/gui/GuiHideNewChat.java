@@ -10,6 +10,7 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 import hide.chat.HideChatLine;
 import hide.chat.HideChatSystem.ChatChannel;
@@ -41,6 +42,15 @@ public class GuiHideNewChat extends GuiNewChat {
 	@Override
 	public void refreshChat() {
 		getChannelHolder().refresh();
+	}
+
+	public void updateTeam() {
+		channelView = Sets.union(channelView, ImmutableSet.of(new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction())));
+		channelView = ImmutableSet.copyOf(channelView.stream().map((pair) -> {
+			if (pair.getLeft() == ChatChannel.Team)
+				return new ImmutablePair<>(pair.getLeft(), FactionUtil.getFaction());
+			return pair;
+		}).iterator());
 	}
 
 	/** チャットのビューを変更 */
@@ -80,11 +90,7 @@ public class GuiHideNewChat extends GuiNewChat {
 	@Override
 	public void clearChatMessages(boolean p_146231_1_) {
 		scopeMap.clear();
-		channelView = ImmutableSet.copyOf(channelView.stream().map((pair) -> {
-			if (pair.getLeft() == ChatChannel.Team)
-				return new ImmutablePair<>(pair.getLeft(), FactionUtil.getFaction());
-			return pair;
-		}).iterator());
+		updateTeam();
 	}
 
 	/** チャットは届かないはずなのでシステムメッセージのみ */

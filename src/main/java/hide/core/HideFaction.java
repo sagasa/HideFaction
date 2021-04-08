@@ -24,6 +24,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
@@ -98,7 +99,7 @@ public class HideFaction {
 		subSystems.forEach(sys -> sys.serverStop(event));
 	}
 
-	@SubscribeEvent()
+	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void onEvent(PlayerLoggedInEvent event) {
 		DataSync.update((EntityPlayerMP) event.player);
 	}
