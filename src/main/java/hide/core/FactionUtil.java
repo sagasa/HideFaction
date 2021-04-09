@@ -5,6 +5,7 @@ import java.util.UUID;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.scoreboard.ScorePlayerTeam;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -37,10 +38,10 @@ public class FactionUtil {
 		return team == null ? "" : team.getDisplayName();
 	}
 
-	public static String getFactionDisplay(World world, String name) {
-		if (world == null)
+	public static String getFactionDisplay(MinecraftServer server, String name) {
+		if (server == null)
 			return "";
-		ScorePlayerTeam team = world.getScoreboard().getTeam(name);
+		ScorePlayerTeam team = server.worlds[0].getScoreboard().getTeam(name);
 		return team == null ? "" : team.getDisplayName();
 	}
 

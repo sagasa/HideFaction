@@ -18,11 +18,11 @@ public class GuiCapProgress implements IToast {
 	private long firstDrawTime;
 	private boolean hasNewOutputs = true;
 
-	/**侵攻中のチーム*/
+	/** 侵攻中のチーム */
 	String by;
-	/**地名*/
+	/** 地名 */
 	String where;
-	/**識別用tag*/
+	/** 識別用tag */
 	String tag;
 
 	String tmp;
@@ -31,13 +31,11 @@ public class GuiCapProgress implements IToast {
 
 	CapState state;
 
-
 	int color_base;
 	int color_over;
 
-
-
-	GuiCapProgress setState(String tag, String name, CapState state, String team, String tmp, String myTeam, float progress) {
+	GuiCapProgress setState(String tag, String name, CapState state, String team, String tmp, String myTeam,
+			float progress) {
 		this.tag = tag;
 		this.by = team;
 		this.tmp = tmp;
@@ -56,8 +54,7 @@ public class GuiCapProgress implements IToast {
 		Good, Norm, Bad
 	}
 
-
-
+	@Override
 	public IToast.Visibility draw(GuiToast toastGui, long delta) {
 
 		if (this.hasNewOutputs) {
@@ -71,14 +68,15 @@ public class GuiCapProgress implements IToast {
 
 		drawProgress(67, 3, 160, 29, color_base, color_over, progress);
 
-		drawStringCenter(mc.fontRenderer, by, 0, 25, 0xFFDDDDDD);
-		drawStringCenter(mc.fontRenderer, tmp, 0, 45, 0xFFDDDDDD);
-		drawStringCenter(mc.fontRenderer, state.toString(), 0, 5, 0xFFDDDDDD);
+//		drawStringCenter(mc.fontRenderer, by, 0, 25, 0xFFDDDDDD);
+//		drawStringCenter(mc.fontRenderer, tmp, 0, 45, 0xFFDDDDDD);
+//		drawStringCenter(mc.fontRenderer, state.toString(), 0, 5, 0xFFDDDDDD);
 
 		drawStringCenter(mc.fontRenderer, where, 112, 5, 0xFFDDDDDD);
-		drawStringCenter(mc.fontRenderer, state == CapState.Invade ? tmp : by, 112, 27 - mc.fontRenderer.FONT_HEIGHT, 0xFFDDDDDD);
+		drawStringCenter(mc.fontRenderer, state == CapState.Invade ? tmp : by, 112, 27 - mc.fontRenderer.FONT_HEIGHT,
+				0xFFDDDDDD);
 
-		//Gui.drawRect(3, 28, 157, 29, );
+		// Gui.drawRect(3, 28, 157, 29, );
 		RenderHelper.enableGUIStandardItemLighting();
 
 		return delta - this.firstDrawTime >= 1000L ? IToast.Visibility.HIDE : IToast.Visibility.SHOW;
@@ -92,13 +90,14 @@ public class GuiCapProgress implements IToast {
 
 	@Override
 	public Object getType() {
-		return tag;
+		return tag + where;
 	}
 
-	public static void addOrUpdate(GuiToast guiToast, String tag, String name, CapState state, String team, String tmp, String myTeam, float progress) {
+	public static void addOrUpdate(GuiToast guiToast, String tag, String name, CapState state, String team, String tmp,
+			String myTeam, float progress) {
 		if (tag == null)
 			return;
-		GuiCapProgress gui = guiToast.getToast(GuiCapProgress.class, tag);
+		GuiCapProgress gui = guiToast.getToast(GuiCapProgress.class, tag + name);
 		if (gui == null) {
 			guiToast.add(new GuiCapProgress().setState(tag, name, state, team, tmp, myTeam, progress));
 		} else {

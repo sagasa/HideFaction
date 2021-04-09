@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.logging.log4j.util.Strings;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -45,18 +46,20 @@ public class GuiHideNewChat extends GuiNewChat {
 	}
 
 	public void updateTeam() {
-		channelView = Sets.union(channelView, ImmutableSet.of(new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction())));
-		channelView = ImmutableSet.copyOf(channelView.stream().map((pair) -> {
-			if (pair.getLeft() == ChatChannel.Team)
-				return new ImmutablePair<>(pair.getLeft(), FactionUtil.getFaction());
-			return pair;
-		}).iterator());
+		// チーム依存のものを追加
+		if (Strings.isNotEmpty(FactionUtil.getFaction())) {
+			channelView = Sets.union(channelView,
+					ImmutableSet.of(new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction()),
+							new ImmutablePair<>(ChatChannel.Info, FactionUtil.getFaction())));
+			channelView = GuiHideChat.applyChange(channelView);
+
+		}
 	}
 
 	/** チャットのビューを変更 */
 	public void setChannelView(Set<ImmutablePair<ChatChannel, String>> view) {
 		if (!channelView.equals(view)) {
-			//System.out.println("Change "+view);
+			// System.out.println("Change "+view);
 			channelView = view;
 			ref.ref(channelView);
 		}

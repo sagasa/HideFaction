@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import hide.capture.CaptureManager.CountMap;
 import hide.event.CaptureWar;
 import hide.event.CaptureWar.CapPointData;
+import hide.event.CaptureWar.VictoryConditions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -31,10 +32,13 @@ public class GuiCapState {
 		int color = 0xFF666666;
 	}
 
+	boolean usePoint;
+
 	PointState[] state;
 
 	public GuiCapState(CaptureWar war) {
 		CapPointData[] array = war.get(CaptureWar.CapRegion);
+		usePoint = war.get(CaptureWar.VictoryType) != VictoryConditions.LastCap;
 		state = new PointState[array.length];
 		for (int i = 0; i < array.length; i++) {
 			state[i] = new PointState(array[i].get(CapPointData.Name));
@@ -48,10 +52,11 @@ public class GuiCapState {
 		final int xCenter = width / 2;
 		final int yCenter = 12 + guiCount * 30;
 
-		drawCapPointState(width / 2, yCenter + 15);
-
-		drawStringProgress(xCenter / 2, yCenter, xCenter / 2, FRIEND, myPoint, myString);
-		drawStringProgress(xCenter / 2 * 3, yCenter, xCenter / 2, ENEMY, enemyPoint, enemyString);
+		drawCapPointState(width / 2, yCenter + (usePoint ? 15 : 0));
+		if (usePoint) {
+			drawStringProgress(xCenter / 3 * 2, yCenter, xCenter / 2, FRIEND, myPoint, myString);
+			drawStringProgress(xCenter / 3 * 4, yCenter, xCenter / 2, ENEMY, enemyPoint, enemyString);
+		}
 	}
 
 	private void drawStringProgress(int centerX, int centerY, int width, int color, float progress, String str) {
@@ -79,7 +84,7 @@ public class GuiCapState {
 		left += StateGap / 2;
 		for (PointState pointState : state) {
 			Gui.drawRect(left, up + 1, left + StateWidth, down - 1, 0xFF444444);
-			drawProgress(left, up, left + StateWidth, down, NORMAL, pointState.color, pointState.progress);
+			drawProgress(left, up, left + StateWidth, down, NORMAL, pointState.color, Math.min(pointState.progress, 1));
 			drawStringCenter(mc.fontRenderer, pointState.name, left + StateWidth / 2, y, 0xFFFFFFFF);
 			left += StateGap + StateWidth;
 		}

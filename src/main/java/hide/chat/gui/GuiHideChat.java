@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.logging.log4j.util.Strings;
 import org.lwjgl.input.Mouse;
 
 import com.google.common.collect.ImmutableSet;
@@ -65,8 +66,11 @@ public class GuiHideChat extends GuiChat {
 	}
 
 	private static final ImmutablePair<ChatChannel, String> Global = new ImmutablePair<>(ChatChannel.Global, "");
-	private ImmutablePair<ChatChannel, String> Team = new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction());
 	private static final ImmutablePair<ChatChannel, String> Info = new ImmutablePair<>(ChatChannel.Info, "");
+	private static final ImmutablePair<ChatChannel, String> Client = new ImmutablePair(ChatChannel.ClientOut, "");
+	private ImmutablePair<ChatChannel, String> InfoTeam = new ImmutablePair<>(ChatChannel.Info,
+			FactionUtil.getFaction());
+	private ImmutablePair<ChatChannel, String> Team = new ImmutablePair<>(ChatChannel.Team, FactionUtil.getFaction());
 
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
@@ -111,8 +115,8 @@ public class GuiHideChat extends GuiChat {
 	}
 
 	/** 最低限含まれるチャンネル */
-	protected static final ImmutableSet<ImmutablePair<ChatChannel, String>> COMMON_VIEW = ImmutableSet.of(Info,
-			new ImmutablePair(ChatChannel.ClientOut, ""));
+	protected final ImmutableSet<ImmutablePair<ChatChannel, String>> COMMON_VIEW = ImmutableSet.of(Client, Info,
+			InfoTeam);
 	/** 選択トグル用 */
 	protected Set<ImmutablePair<ChatChannel, String>> oldView = COMMON_VIEW;
 
@@ -132,8 +136,7 @@ public class GuiHideChat extends GuiChat {
 				if (view.size() == COMMON_VIEW.size() + 1) {
 					// １つしか入っていないなら
 					// チームチャットの不正閲覧防止
-					newChat.setChannelView(Sets.filter(oldView,
-							(ch) -> ch.left != ChatChannel.Team || ch.right.equals(FactionUtil.getFaction())));
+					newChat.setChannelView(applyChange(oldView));
 				} else {
 					oldView = view;
 					newChat.setChannelView(Sets.union(COMMON_VIEW, ImmutableSet.of(channel)));
@@ -141,13 +144,26 @@ public class GuiHideChat extends GuiChat {
 				}
 			} else {
 				// 含まないなら
-				newChat.setChannelView(Sets.union(view, ImmutableSet.of(channel)));
+				newChat.setChannelView(Sets.union(applyChange(oldView), ImmutableSet.of(channel)));
 			}
 		}
 
 		viewGrobal.isSelected = newChat.getChannelView().contains(Global);
 		viewTeam.isSelected = newChat.getChannelView().contains(Team);
 		viewTeam.enabled = FactionUtil.getTeam() != null;
+	}
+
+	public static ImmutableSet<ImmutablePair<ChatChannel, String>> applyChange(
+			Set<ImmutablePair<ChatChannel, String>> set) {
+		boolean flag = Strings.isNotBlank(FactionUtil.getFaction());
+
+		return ImmutableSet.copyOf(set.stream().filter(pair -> flag || pair.getLeft() != ChatChannel.Team
+				&& (pair.getLeft() != ChatChannel.Info || Strings.isBlank(pair.right))).map((pair) -> {
+					if (pair.getLeft() == ChatChannel.Team
+							|| pair.getLeft() == ChatChannel.Info && Strings.isNotBlank(pair.right))
+						return new ImmutablePair<>(pair.getLeft(), FactionUtil.getFaction());
+					return pair;
+				}).iterator());
 	}
 
 	/*

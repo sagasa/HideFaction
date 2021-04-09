@@ -20,18 +20,21 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-/**イベントバスにはクライアント側も登録される sideで分岐必須*/
+/** イベントバスにはクライアント側も登録される sideで分岐必須 */
 public abstract class HideEvent extends DataBase {
 
 	protected Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-	/**読み込み時のindex*/
+	/** 読み込み時のindex */
 	transient byte index;
 
 	/** 親の登録名 String */
 	public static final DataEntry<String> ParentName = of("");
 
 	protected Side side = Side.SERVER;
+
+	/** サーバーサイドのみ */
+	protected HideEventSystem eventSystem;
 
 	protected void setParent(HideEvent data) {
 		parent = data;
@@ -86,10 +89,10 @@ public abstract class HideEvent extends DataBase {
 
 	abstract void fromServer(ByteBuf buf);
 
-	/**ログイン時等全部配信するときtrue*/
+	/** ログイン時等全部配信するときtrue */
 	abstract void toBytes(ByteBuf buf, boolean all);
 
-	/**指定した場合全種送信*/
+	/** 指定した場合全種送信 */
 	protected void toClient(EntityPlayerMP player) {
 		if (player == null)
 			HideFaction.NETWORK.sendToAll(new HideEventSystem.NetMsg(this));

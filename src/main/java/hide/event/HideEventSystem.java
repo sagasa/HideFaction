@@ -70,7 +70,7 @@ public class HideEventSystem implements IHideSubSystem {
 			});
 	public static HideEventSystem INSTANCE = new HideEventSystem();
 
-	/*リスナにクライアント側の登録処理を*/
+	/* リスナにクライアント側の登録処理を */
 	static {
 		HideEventSync.addListener((oldList, newList) -> {
 
@@ -177,6 +177,7 @@ public class HideEventSystem implements IHideSubSystem {
 		// 登録
 		eventList.forEach(arg -> {
 			map.put(arg.getName(), arg);
+			arg.eventSystem = this;
 			arg.initServer(this);
 		});
 		eventList.forEach(arg -> {

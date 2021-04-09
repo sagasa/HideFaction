@@ -14,6 +14,8 @@ import com.google.common.base.Strings;
 import hide.chat.gui.GuiHideChat;
 import hide.chat.gui.GuiHideNewChat;
 import hide.core.FactionUtil;
+import hide.core.HideEvents.TeamUpdate;
+import hide.core.HideEvents.TeamUpdateClient;
 import hide.core.HideFaction;
 import hide.core.HidePlayerDataManager;
 import hide.core.HidePlayerDataManager.IHidePlayerData;
@@ -22,6 +24,7 @@ import hide.core.asm.HideCoreHook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
@@ -54,8 +57,11 @@ public class HideChatSystem implements IHideSubSystem {
 		}
 	}
 
+	private MinecraftServer server;
+
 	@Override
 	public void serverStart(FMLServerStartingEvent event) {
+		server = event.getServer();
 		HideChatDB.start();
 		System.out.println("Start Server");
 		event.registerServerCommand(new CommandChat());
@@ -84,13 +90,13 @@ public class HideChatSystem implements IHideSubSystem {
 
 	public enum ChatChannel {
 		/** 全体チャット */
-		Global(true, "§l§7[%s]§5[§6Global§5]§b[§r%s§b]§r%s§r %s"),
+		Global(true, "§7[%s]§5[§6Global§5]§b[§r%s§b]§r%s§r %s"),
 		/** チームチャット */
-		Team(true, "§l§7[%s]§5[§3Team§5]§r%s§r %s"),
-		/** イベント情報等 */
-		Info(false, "§l§7[%s]§5[§ePrivate§5]§r%s§a-§l>§r%s§r %s"),
+		Team(true, "§7[%s]§5[§3Team§5]§r%s§r %s"),
+		/** イベント情報等 チャンネル名でチーム指定 */
+		Info(false),
 
-		ClientOut(false, "§5[§3Client§5]"), Private(true);
+		ClientOut(false, "§5[§3Client§5]"), Private(true, "§7[%s]§5[§ePrivate§5]§r%s§a-§l>§r%s§r %s");
 		/** 発言可能か */
 		public final boolean CanWrite;
 		/** sender cannelName return */
@@ -135,8 +141,32 @@ public class HideChatSystem implements IHideSubSystem {
 	}
 
 	@SubscribeEvent()
+	@SideOnly(Side.CLIENT)
+	public void teamUpdate(TeamUpdateClient event) {
+		((GuiHideNewChat) Minecraft.getMinecraft().ingameGUI.persistantChatGUI).updateTeam();
+	}
+
+	@SubscribeEvent()
+	public void onTeamChange(TeamUpdate event) {
+		if (server == null)
+			return;
+		EntityPlayer player = server.getPlayerList().getPlayerByUsername(event.Player);
+		if (player != null) {
+			ServerChatData data = HidePlayerDataManager.getServerData(ServerChatData.class, player);
+			if (data != null && data.sendChannel.left == ChatChannel.Team) {
+				data.sendChannel = ImmutablePair.of(ChatChannel.Team, FactionUtil.getFaction(player));
+			}
+		}
+
+	}
+
+	/* +24時間表記のタイムスタンプ */
+	public static String makeTimeString() {
+		return formatHHMM.format(System.currentTimeMillis());
+	}
+
+	@SubscribeEvent()
 	public void onChat(ServerChatEvent event) {
-		System.out.println("Chat event capture");
 		EntityPlayer player = event.getPlayer();
 		ImmutablePair<ChatChannel, String> channelPair = HidePlayerDataManager.getServerData(ServerChatData.class,
 				player).sendChannel;
@@ -147,12 +177,12 @@ public class HideChatSystem implements IHideSubSystem {
 
 		ITextComponent text;
 		if (channel == ChatChannel.Team) {
-			text = new TextComponentString(String.format(channel.Prefix, formatHHMM.format(System.currentTimeMillis()),
+			text = new TextComponentString(String.format(channel.Prefix, makeTimeString(),
 					FactionUtil.getPlayerDisplay(player), event.getMessage()));
 		} else {
-			text = new TextComponentString(String.format(channel.Prefix, formatHHMM.format(System.currentTimeMillis()),
-					Strings.isNullOrEmpty(faction) ? "Rookie" : faction, FactionUtil.getPlayerDisplay(player),
-					event.getMessage()));
+			text = new TextComponentString(
+					String.format(channel.Prefix, makeTimeString(), Strings.isNullOrEmpty(faction) ? "Rookie" : faction,
+							FactionUtil.getPlayerDisplay(player), event.getMessage()));
 		}
 		addChat(event.getPlayer().getUniqueID().toString(), channelPair, text);
 		// *
@@ -167,11 +197,10 @@ public class HideChatSystem implements IHideSubSystem {
 		event.setCanceled(true);
 	}
 
-	private static final ImmutablePair<ChatChannel, String> SYSTEM_CHANNEL = ImmutablePair.of(ChatChannel.ClientOut,
-			"");
+	private static final ImmutablePair<ChatChannel, String> INFO_CHANNEL = ImmutablePair.of(ChatChannel.Info, "");
 
-	public static void sendToSystem(ITextComponent text) {
-		addChat("system", SYSTEM_CHANNEL, text);
+	public static void sendToInfo(String channel, ITextComponent text) {
+		addChat("system", channel == null ? INFO_CHANNEL : ImmutablePair.of(ChatChannel.Info, channel), text);
 	}
 
 	/** DBに焼いて配信 */
