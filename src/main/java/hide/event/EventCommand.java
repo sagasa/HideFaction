@@ -1,8 +1,9 @@
 package hide.event;
 
+import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.ArrayUtils;
+import com.google.common.collect.ImmutableList;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -26,7 +27,7 @@ public class EventCommand extends CommandBase {
 
 	@Override
 	public String getUsage(ICommandSender sender) {
-		return "commands.region.usage";
+		return "commands.hideevent.usage";
 	}
 
 	public static void sendCmdRes(ICommandSender sender, String msg, Object... obj) {
@@ -36,34 +37,49 @@ public class EventCommand extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (args.length < 2) {
-			throw new WrongUsageException("commands.region.usage", new Object[0]);
+			throw new WrongUsageException("commands.hideevent.usage");
 		} else {
 			if (args[0].equalsIgnoreCase("start")) {
 				if (HideEventSystem.INSTANCE.eventStart(args[1]))
-					;
+					sendCmdRes(sender, "commands.hideevent.start.success", args[1]);
 				else
-					;
-				sendCmdRes(sender, "");
+					throw new WrongUsageException("commands.hideevent.eventnotfound", args[1]);
+			} else if (args[0].equalsIgnoreCase("stop")) {
+				if (HideEventSystem.INSTANCE.eventStop(args[1]))
+					sendCmdRes(sender, "commands.hideevent.stop.success", args[1]);
+				else
+					throw new WrongUsageException("commands.hideevent.eventnotfound", args[1]);
 			} else if (args[0].equalsIgnoreCase("update")) {
-				sendCmdRes(sender, "");
 				if (HideEventSystem.INSTANCE.eventUpdate(args[1]))
-					;
+					sendCmdRes(sender, "commands.hideevent.update.success", args[1]);
 				else
-					;
+					throw new WrongUsageException("commands.hideevent.eventnotfound", args[1]);
 			} else if (args[0].equalsIgnoreCase("end")) {
-				sendCmdRes(sender, "");
 				if (HideEventSystem.INSTANCE.eventEnd(args[1]))
-					;
+					sendCmdRes(sender, "commands.hideevent.end.success", args[1]);
 				else
-					;
+					throw new WrongUsageException("commands.hideevent.eventnotfound", args[1]);
+			} else if (args[0].equalsIgnoreCase("clear")) {
+				if (HideEventSystem.INSTANCE.eventClear(args[1]))
+					sendCmdRes(sender, "commands.hideevent.clear.success", args[1]);
+				else
+					throw new WrongUsageException("commands.hideevent.eventnotfound", args[1]);
+			} else {
+				throw new WrongUsageException("commands.hideevent.operatornotfound", args[0]);
 			}
 		}
 	}
 
+	private static final List<String> operator = ImmutableList.of("start", "stop", "update", "end", "clear");
+
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args,
 			BlockPos targetPos) {
-		System.out.println(sender + " " + ArrayUtils.toString(args) + " " + targetPos);
-		return super.getTabCompletions(server, sender, args, targetPos);
+		if (args.length == 1) {
+			return getListOfStringsMatchingLastWord(args, operator);
+		} else if (args.length == 2) {
+			return getListOfStringsMatchingLastWord(args, HideEventSystem.INSTANCE.map.keySet());
+		}
+		return Collections.emptyList();
 	}
 }

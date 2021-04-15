@@ -262,9 +262,19 @@ public class CaptureWar extends HideEvent {
 	}
 
 	@Override
-	public void start() {
-		System.out.println("Start event");
+	void start() {
 		save.isStart = true;
+	}
+
+	@Override
+	void stop() {
+		save.isStart = false;
+		toClient(null);
+		saveState();
+	}
+
+	@Override
+	void clear() {
 		save.point.clear();
 		save.point_change = true;
 	}
@@ -272,7 +282,7 @@ public class CaptureWar extends HideEvent {
 	transient private CountMap<String> countCash = new CountMap();
 
 	@Override
-	public void update() {
+	void update() {
 		if (!save.isStart)
 			return;
 		if (get(VictoryType) != VictoryConditions.LastCap) {
@@ -308,7 +318,7 @@ public class CaptureWar extends HideEvent {
 	}
 
 	@Override
-	public void end() {
+	void end() {
 		if (!save.isStart)
 			return;
 		CapPointData[] capPointData = get(CapRegion);
@@ -360,8 +370,6 @@ public class CaptureWar extends HideEvent {
 				}
 			}
 		}
-		save.isStart = false;
-		toClient(null);
 		System.out.println("End event");
 	}
 
@@ -437,5 +445,4 @@ public class CaptureWar extends HideEvent {
 		}
 		buf.writeBoolean(save.isStart);
 	}
-
 }

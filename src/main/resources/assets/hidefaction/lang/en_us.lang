@@ -5,6 +5,15 @@ commands.region.usage=/faction <gui|op|deop> [player]
 commands.region.op.success=op %s
 commands.region.deop.success=deop %s
 
+commands.hideevent.usage=/hideevent <start|stop|update|end|clear> <eventName>
+commands.hideevent.eventnotfound=event %s not found
+commands.hideevent.operatornotfound=operator %s not found
+commands.hideevent.start.success=start %s
+commands.hideevent.stop.success=stop %s
+commands.hideevent.end.success=end %s
+commands.hideevent.clear.success=clear %s
+commands.hideevent.update.success=update %s
+
 hide.gui.capture.start=%s capturing by %s
 hide.gui.capture.success=%s captured by %s
 

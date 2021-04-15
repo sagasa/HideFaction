@@ -77,11 +77,20 @@ public abstract class HideEvent extends DataBase {
 
 	};
 
+	/**イベントを開始状態に*/
 	abstract void start();
 
+	/**イベントを停止状態に*/
+	abstract void stop();
+
+	/**イベントの更新*/
 	abstract void update();
 
+	/**イベントを集計 リセット含まない*/
 	abstract void end();
+
+	/**イベントをリセット*/
+	abstract void clear();
 
 	abstract void fromSave(String json);
 

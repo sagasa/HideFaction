@@ -204,6 +204,14 @@ public class HideEventSystem implements IHideSubSystem {
 		return false;
 	}
 
+	public boolean eventStop(String name) {
+		if (map.containsKey(name)) {
+			map.get(name).stop();
+			return true;
+		}
+		return false;
+	}
+
 	public boolean eventUpdate(String name) {
 		if (map.containsKey(name)) {
 			map.get(name).update();
@@ -215,6 +223,16 @@ public class HideEventSystem implements IHideSubSystem {
 	public boolean eventEnd(String name) {
 		if (map.containsKey(name)) {
 			map.get(name).end();
+			map.get(name).clear();
+			map.get(name).stop();
+			return true;
+		}
+		return false;
+	}
+
+	public boolean eventClear(String name) {
+		if (map.containsKey(name)) {
+			map.get(name).clear();
 			return true;
 		}
 		return false;
