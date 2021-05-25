@@ -187,6 +187,7 @@ public class RegionEditGUI extends GuiScreen {
 		if (tagList.isSelectTag()) {
 			region.getTag()[tagList.getIndex()] = tagEdit.getText();
 			HideFaction.NETWORK.sendToServer(PacketRegionEdit.editRegion(regionIndex, region));
+			HideFaction.NETWORK.sendToServer(PacketRegionEdit.register());
 		} else {
 			region.setRuleName(ruleName.getText());
 			HideFaction.NETWORK.sendToServer(PacketRegionEdit.editRegion(regionIndex, region));

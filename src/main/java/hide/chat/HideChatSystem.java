@@ -19,7 +19,7 @@ import hide.core.HideEvents.TeamUpdateClient;
 import hide.core.HideFaction;
 import hide.core.HidePlayerDataManager;
 import hide.core.HidePlayerDataManager.IHidePlayerData;
-import hide.core.IHideSubSystem;
+import hide.core.HideSubSystem.IHideSubSystem;
 import hide.core.asm.HideCoreHook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiChat;

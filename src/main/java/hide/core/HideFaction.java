@@ -1,15 +1,12 @@
 package hide.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.logging.log4j.Logger;
 
 import hide.chat.HideChatSystem;
 import hide.core.gui.FactionGUIHandler;
-import hide.core.network.DataSync;
-import hide.core.network.DataSync.SyncMsg;
 import hide.core.network.PacketSimpleCmd;
+import hide.core.sync.DataSync;
+import hide.core.sync.DataSync.SyncMsg;
 import hide.event.HideEventSystem;
 import hide.faction.FactionSystem;
 import hide.region.RegionSystem;
@@ -48,24 +45,17 @@ public class HideFaction {
 		return log;
 	}
 
+	private HideSubSystem subSystem = new HideSubSystem();
+
 	@EventHandler
 	public void construct(FMLConstructionEvent event) {
 		//サブシステム登録
-		registerSubSystem(event, new HideChatSystem());
-		registerSubSystem(event, new RegionSystem());
-		registerSubSystem(event, new FactionSystem());
-		registerSubSystem(event, new HideLootSystem());
-		registerSubSystem(event, HideEventSystem.INSTANCE);
-
+		subSystem.register(event, new HideChatSystem());
+		subSystem.register(event, new RegionSystem());
+		subSystem.register(event, new FactionSystem());
+		subSystem.register(event, new HideLootSystem());
+		subSystem.register(event, HideEventSystem.INSTANCE);
 		MinecraftForge.EVENT_BUS.register(this);
-	}
-
-	private List<IHideSubSystem> subSystems = new ArrayList<>();
-
-	private void registerSubSystem(FMLConstructionEvent event, IHideSubSystem system) {
-		MinecraftForge.EVENT_BUS.register(system);
-		system.init(event.getSide());
-		subSystems.add(system);
 	}
 
 	@EventHandler
@@ -91,12 +81,12 @@ public class HideFaction {
 
 	@EventHandler
 	public void serverStart(FMLServerStartingEvent event) {
-		subSystems.forEach(sys -> sys.serverStart(event));
+		subSystem.serverStart(event);
 	}
 
 	@EventHandler
 	public void serverStop(FMLServerStoppedEvent event) {
-		subSystems.forEach(sys -> sys.serverStop(event));
+		subSystem.serverStop(event);
 	}
 
 	@SubscribeEvent(priority = EventPriority.HIGH)

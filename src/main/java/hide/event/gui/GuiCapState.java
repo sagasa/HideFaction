@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import hide.capture.CaptureManager.CountMap;
+import hide.core.FactionUtil;
 import hide.event.CaptureWar;
 import hide.event.CaptureWar.CapPointData;
 import hide.event.CaptureWar.VictoryConditions;
@@ -114,17 +115,17 @@ public class GuiCapState {
 		if (pointMap.size() < 2) {
 			// 1件or0件
 			if (pointMap.containsKey(myTeam)) {
-				myString = I18n.format(ViewKey, myTeam, pointMap.get(myTeam), 1);
+				myString = I18n.format(ViewKey, FactionUtil.getFactionDisplay(myTeam), pointMap.get(myTeam), 1);
 				myPoint = 1;
 				enemyString = I18n.format(ViewNone);
 				enemyPoint = 0;
 			} else {
-				myString = I18n.format(ViewKey, myTeam, 0, 2);
+				myString = I18n.format(ViewKey, FactionUtil.getFactionDisplay(myTeam), 0, 2);
 				myPoint = 0;
 
 				Entry<String, Integer> big = pointMap.biggest();
 				if (big != null) {
-					enemyString = I18n.format(I18n.format(ViewKey, big.getKey(), big.getValue(), 1));
+					enemyString = I18n.format(ViewKey, FactionUtil.getFactionDisplay(big.getKey()), big.getValue(), 1);
 					enemyPoint = 1;
 				} else {
 					enemyString = I18n.format(ViewNone);
@@ -137,10 +138,10 @@ public class GuiCapState {
 			float total = pointMap.values().stream().collect(Collectors.summingInt(count -> count));
 
 			if (pointMap.containsKey(myTeam)) {
-				myString = I18n.format(I18n.format(ViewKey, myTeam, pointMap.get(myTeam), list.indexOf(myTeam) + 1));
+				myString = I18n.format(ViewKey, FactionUtil.getFactionDisplay(myTeam), pointMap.get(myTeam), list.indexOf(myTeam) + 1);
 				myPoint = pointMap.getNum(myTeam) / total;
 			} else {
-				myString = I18n.format(ViewKey, myTeam, 0, pointMap.size() + 1);
+				myString = I18n.format(ViewKey, FactionUtil.getFactionDisplay(myTeam), 0, pointMap.size() + 1);
 				myPoint = 0;
 			}
 
@@ -151,7 +152,7 @@ public class GuiCapState {
 			else
 				enemy = list.get(0);
 
-			enemyString = I18n.format(I18n.format(ViewKey, enemy, pointMap.get(enemy), list.indexOf(enemy) + 1));
+			enemyString = I18n.format(I18n.format(ViewKey, FactionUtil.getFactionDisplay(enemy), pointMap.get(enemy), list.indexOf(enemy) + 1));
 			enemyPoint = pointMap.getNum(enemy) / total;
 		}
 	}

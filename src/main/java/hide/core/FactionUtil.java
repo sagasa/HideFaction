@@ -45,6 +45,15 @@ public class FactionUtil {
 		return team == null ? "" : team.getDisplayName();
 	}
 
+	@SideOnly(Side.CLIENT)
+	public static String getFactionDisplay(String name) {
+		World world = Minecraft.getMinecraft().world;
+		if (world == null)
+			return "";
+		ScorePlayerTeam team = world.getScoreboard().getTeam(name);
+		return team == null ? "" : team.getDisplayName();
+	}
+
 	public static EntityPlayer getPlayer(World world, String uuid) {
 		if (world == null)
 			return null;

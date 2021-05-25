@@ -2,6 +2,7 @@ package hide.event.gui;
 
 import static hide.event.gui.CapWarGuiUtil.*;
 
+import hide.core.FactionUtil;
 import hide.event.CaptureWar.CapState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -9,6 +10,7 @@ import net.minecraft.client.gui.toasts.GuiToast;
 import net.minecraft.client.gui.toasts.IToast;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -25,8 +27,6 @@ public class GuiCapProgress implements IToast {
 	/** 識別用tag */
 	String tag;
 
-	String tmp;
-
 	float progress;
 
 	CapState state;
@@ -37,8 +37,7 @@ public class GuiCapProgress implements IToast {
 	GuiCapProgress setState(String tag, String name, CapState state, String team, String tmp, String myTeam,
 			float progress) {
 		this.tag = tag;
-		this.by = team;
-		this.tmp = tmp;
+		this.by = CapState.Invade == CapState.Stop ? I18n.format("hide.gui.stop") : FactionUtil.getFactionDisplay(state == CapState.Invade ? tmp : team);
 		this.where = name;
 		this.state = state;
 		this.progress = progress;
@@ -68,18 +67,18 @@ public class GuiCapProgress implements IToast {
 
 		drawProgress(67, 3, 160, 29, color_base, color_over, progress);
 
-//		drawStringCenter(mc.fontRenderer, by, 0, 25, 0xFFDDDDDD);
-//		drawStringCenter(mc.fontRenderer, tmp, 0, 45, 0xFFDDDDDD);
-//		drawStringCenter(mc.fontRenderer, state.toString(), 0, 5, 0xFFDDDDDD);
+		//		drawStringCenter(mc.fontRenderer, by, 0, 25, 0xFFDDDDDD);
+		//		drawStringCenter(mc.fontRenderer, tmp, 0, 45, 0xFFDDDDDD);
+		//		drawStringCenter(mc.fontRenderer, state.toString(), 0, 5, 0xFFDDDDDD);
 
 		drawStringCenter(mc.fontRenderer, where, 112, 5, 0xFFDDDDDD);
-		drawStringCenter(mc.fontRenderer, state == CapState.Invade ? tmp : by, 112, 27 - mc.fontRenderer.FONT_HEIGHT,
+		drawStringCenter(mc.fontRenderer, by, 112, 27 - mc.fontRenderer.FONT_HEIGHT,
 				0xFFDDDDDD);
 
 		// Gui.drawRect(3, 28, 157, 29, );
 		RenderHelper.enableGUIStandardItemLighting();
 
-		return delta - this.firstDrawTime >= 1000L ? IToast.Visibility.HIDE : IToast.Visibility.SHOW;
+		return delta - this.firstDrawTime >= 1000L && state != CapState.Stop ? IToast.Visibility.HIDE : IToast.Visibility.SHOW;
 
 	}
 

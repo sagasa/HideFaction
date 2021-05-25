@@ -43,6 +43,11 @@ public class RegionCommand extends CommandBase {
 		if (args.length <= 0) {
 			throw new WrongUsageException("commands.region.usage", new Object[0]);
 		} else {
+			if (args[0].equalsIgnoreCase("reload")) {
+				RegionHolder.clearManager();
+				sendCmdRes(sender, "commands.region.reload.success");
+				return;
+			}
 			EntityPlayerMP player = args.length >= 2 ? getPlayer(server, sender, args[1]) : getCommandSenderAsPlayer(sender);
 			if (args[0].equalsIgnoreCase("op")) {
 				sendCmdRes(sender, "commands.region.op.success", player.getName());
@@ -52,7 +57,7 @@ public class RegionCommand extends CommandBase {
 				sendCmdRes(sender, "commands.region.deop.success", player.getName());
 				HideFaction.NETWORK.sendTo(PacketRegionData.removeOP(player.getUniqueID()), player);
 				RegionHolder.OPPlayers.remove(player.getUniqueID());
-			}  else if (args[0].equalsIgnoreCase("gui")) {
+			} else if (args[0].equalsIgnoreCase("gui")) {
 				player.openGui(HideFaction.INSTANCE, FactionSystem.FACTION_GUI_ID,
 						sender.getEntityWorld(), 0, 0, 0);
 				// ((EntityPlayer) sender.getCommandSenderEntity())

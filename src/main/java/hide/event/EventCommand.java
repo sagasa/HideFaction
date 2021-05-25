@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
+import hide.core.sync.DataSync;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -37,6 +38,17 @@ public class EventCommand extends CommandBase {
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (args.length < 2) {
+			if (args[0].equalsIgnoreCase("reload")) {
+				HideEventSystem.INSTANCE.load();
+				DataSync.update(HideEventSystem.HideEventSync, null);
+				sendCmdRes(sender, "commands.hideevent.reload.success");
+				return;
+			} else if (args[0].equalsIgnoreCase("list")) {
+				sendCmdRes(sender, "commands.hideevent.list.success", HideEventSystem.INSTANCE.map.keySet());
+				return;
+			}
+
+
 			throw new WrongUsageException("commands.hideevent.usage");
 		} else {
 			if (args[0].equalsIgnoreCase("start")) {
@@ -70,7 +82,7 @@ public class EventCommand extends CommandBase {
 		}
 	}
 
-	private static final List<String> operator = ImmutableList.of("start", "stop", "update", "end", "clear");
+	private static final List<String> operator = ImmutableList.of("start", "stop", "update", "end", "clear", "list", "reload");
 
 	@Override
 	public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args,

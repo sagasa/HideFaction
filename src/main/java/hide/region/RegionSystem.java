@@ -1,7 +1,7 @@
 package hide.region;
 
 import hide.core.HideFaction;
-import hide.core.IHideSubSystem;
+import hide.core.HideSubSystem.IHideSubSystem;
 import hide.region.gui.RegionEditor;
 import hide.region.network.PacketRegionData;
 import hide.region.network.PacketRegionEdit;

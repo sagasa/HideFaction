@@ -3,7 +3,7 @@ package hide.faction;
 import java.util.Map;
 import java.util.UUID;
 
-import hide.core.IHideSubSystem;
+import hide.core.HideSubSystem.IHideSubSystem;
 import hide.core.gui.FactionGUIHandler;
 import hide.core.gui.FactionGUIHandler.HideGuiProvider;
 import hide.core.network.PacketSimpleCmd;
@@ -38,6 +38,7 @@ public class FactionSystem implements IHideSubSystem {
 	@Override
 	public void serverStart(FMLServerStartingEvent event) {
 		event.registerServerCommand(new CommandFaction());
+		event.registerServerCommand(new CommandEquip());
 	}
 
 	static FactionData data = new FactionData();

@@ -244,6 +244,9 @@ public class CaptureWar extends HideEvent {
 						point.current = null;
 					}
 					point.mark();
+				} else if (point.state == CapState.Stop) {
+					point.mark();
+					point.state = CapState.None;
 				}
 			}
 

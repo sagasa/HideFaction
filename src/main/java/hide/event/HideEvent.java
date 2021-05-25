@@ -81,25 +81,34 @@ public abstract class HideEvent extends DataBase {
 	abstract void start();
 
 	/**イベントを停止状態に*/
-	abstract void stop();
+	void stop() {
+	}
 
 	/**イベントの更新*/
-	abstract void update();
+	void update() {
+	}
 
 	/**イベントを集計 リセット含まない*/
-	abstract void end();
+	void end() {
+	}
 
 	/**イベントをリセット*/
-	abstract void clear();
+	void clear() {
+	}
 
-	abstract void fromSave(String json);
+	void fromSave(String json) {
+	}
 
-	abstract String toSave();
+	String toSave() {
+		return "";
+	}
 
-	abstract void fromServer(ByteBuf buf);
+	void fromServer(ByteBuf buf) {
+	}
 
 	/** ログイン時等全部配信するときtrue */
-	abstract void toBytes(ByteBuf buf, boolean all);
+	void toBytes(ByteBuf buf, boolean all) {
+	}
 
 	/** 指定した場合全種送信 */
 	protected void toClient(EntityPlayerMP player) {

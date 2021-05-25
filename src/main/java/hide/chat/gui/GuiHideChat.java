@@ -144,7 +144,7 @@ public class GuiHideChat extends GuiChat {
 				}
 			} else {
 				// 含まないなら
-				newChat.setChannelView(Sets.union(applyChange(oldView), ImmutableSet.of(channel)));
+				newChat.setChannelView(Sets.union(applyChange(view), ImmutableSet.of(channel)));
 			}
 		}
 

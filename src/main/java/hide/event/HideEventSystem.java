@@ -12,20 +12,26 @@ import java.util.Map;
 
 import hide.capture.CaptureManager;
 import hide.core.HideFaction;
-import hide.core.IHideSubSystem;
-import hide.core.network.DataSync;
-import hide.core.network.DataSync.ISyncInterface;
-import hide.core.network.DataSync.SyncEntry;
+import hide.core.HideSubSystem.IHideSubSystem;
+import hide.core.sync.DataSync;
+import hide.core.sync.DataSync.ISyncInterface;
+import hide.core.sync.DataSync.SyncEntry;
 import hide.event.CaptureWar.CapPointData;
+import hide.event.entity.EntityTarget;
+import hide.event.entity.RenderTarget;
 import hide.schedule.ScheduleManager;
 import hide.types.base.DataBase;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegistryEvent.Register;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -36,6 +42,8 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -104,16 +112,32 @@ public class HideEventSystem implements IHideSubSystem {
 
 	@Override
 	public void init(Side side) {
+		HideFaction.registerNetMsg(NetHandler.class, NetMsg.class, side);
+		ScheduleManager.load();
+		eventDir.mkdirs();
 		// サンプル作成
 		writeSample(CaptureWar.class);
 		writeSample(CapPointData.class);
-		HideFaction.registerNetMsg(NetHandler.class, NetMsg.class, side);
-		ScheduleManager.load();
 	}
 
 	@SubscribeEvent
 	public void login(PlayerLoggedInEvent event) {
 		HideEventSync.ServerData.forEach(e -> e.toClient((EntityPlayerMP) event.player));
+	}
+
+	/** モデル登録 */
+	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
+	public void register(ModelRegistryEvent event) {
+		RenderingRegistry.registerEntityRenderingHandler(EntityTarget.class, RenderTarget::new);
+	}
+	private static final String EntityTargetID = "entity_target";
+
+	@SubscribeEvent
+	public void preInit(Register<EntityEntry> event) {
+		// エンティティ登録
+		EntityRegistry.registerModEntity(new ResourceLocation(HideFaction.MODID, EntityTargetID), EntityTarget.class,
+				EntityTargetID, 0, HideFaction.MODID, 512, 1, false);
 	}
 
 	@SubscribeEvent()
@@ -139,6 +163,7 @@ public class HideEventSystem implements IHideSubSystem {
 	public void serverStart(FMLServerStartingEvent event) {
 
 		event.registerServerCommand(new EventCommand());
+		event.registerServerCommand(new CommandTargetSpawn());
 		this.server = event.getServer();
 		SaveDir = server.getActiveAnvilConverter().getFile(server.getFolderName(), "/hide/event/");
 		SaveDir.mkdirs();
