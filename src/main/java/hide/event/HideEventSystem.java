@@ -131,6 +131,7 @@ public class HideEventSystem implements IHideSubSystem {
 	public void register(ModelRegistryEvent event) {
 		RenderingRegistry.registerEntityRenderingHandler(EntityTarget.class, RenderTarget::new);
 	}
+
 	private static final String EntityTargetID = "entity_target";
 
 	@SubscribeEvent
@@ -186,6 +187,8 @@ public class HideEventSystem implements IHideSubSystem {
 			try {
 				if (!file.getName().startsWith("-")) {
 					HideEvent arg = HideEvent.fromFile(file);
+					if (arg == null)
+						continue;
 					// index付与
 					arg.index = (byte) eventList.size();
 					// load

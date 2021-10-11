@@ -50,10 +50,16 @@ public abstract class HideEvent extends DataBase {
 	private String name;
 
 	public static HideEvent fromFile(File file) throws Throwable {
-		HideEvent event = DataBase
-				.fromJson(new String(Files.readAllBytes(Paths.get(file.getPath())), StandardCharsets.UTF_8));
-		event.name = file.getName().substring(0, file.getName().lastIndexOf('.'));
-		return event;
+		try {
+			HideEvent event = DataBase
+					.fromJson(new String(Files.readAllBytes(Paths.get(file.getPath())), StandardCharsets.UTF_8));
+			event.name = file.getName().substring(0, file.getName().lastIndexOf('.'));
+			return event;
+		} catch (Exception e) {
+			HideFaction.log.error("faled to load event "+file.getName());
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	/** 登録名 */
